@@ -1,12 +1,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
+#include <iostream>
 
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
 #include "text/document.hpp"
 #include "text/vvdocument.hpp"
+
+#include "regex/lexingengine.hpp"
 
 std::shared_ptr<Document> doc;
 sf::Font font;
@@ -19,7 +22,7 @@ unsigned int numberLength(unsigned int i)
         ++ret;
     }
 
-    return std::max(1, ret);
+    return std::max(1U, ret);
 }
 
 void repaint(sf::RenderTarget & rt)
@@ -63,13 +66,28 @@ int main(int argc, char ** argv)
 
     doc = std::make_shared<VVDocument>("int main(int argc, char ** argv) {\n    return 0;\n}");
 
+    LexingEngine lexingEngine;
+
+    window.setKeyRepeatEnabled(false);
+
     while (window.isOpen()) {
         sf::Event event;
         if (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
-
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code < 26) {
+                    if(event.key.shift)
+                        lexingEngine.processKeypress(event.key.code + 'A');
+                    else
+                        lexingEngine.processKeypress(event.key.code + 'a');
+                } else if (event.key.code > 25 && event.key.code < 37)  {
+                    lexingEngine.processKeypress(event.key.code - 26 + '0');
+                } else if (event.key.code == 59) {
+                    lexingEngine.processKeypress(8);
+                }
+            }
             repaint(window);
             window.display();
         }

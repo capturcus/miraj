@@ -5,11 +5,11 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 find_package(SFML 2.4 COMPONENTS system window graphics audio REQUIRED)
 
-set(SOURCES
-    src/main.cpp
-    src/text/document.cpp
-    src/text/vvdocument.cpp
-)
+file(GLOB miraj_SRC
+    "src/text/*.cpp"
+    "src/regex/*.cpp"
+    "src/*.cpp"
+    )
 
-add_executable(miraj ${SOURCES})
+add_executable(miraj ${miraj_SRC})
 target_link_libraries(miraj ${SFML_LIBRARIES})
