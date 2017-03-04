@@ -1,17 +1,35 @@
 #include <cstdio>
 #include <cstdlib>
+#include <locale>
 #include <memory>
 #include <iostream>
+#include <string>
 
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "text/document.hpp"
-#include "text/vvdocument.hpp"
+#include "text/coloredchar.hpp"
 
 #include "regex/lexingengine.hpp"
 
-std::shared_ptr<Document> doc;
+#include "structures/linelist.hpp"
+
+template<typename T>
+static inline std::vector<T> operator+(const std::vector<T> & a, const std::vector<T> & b)
+{
+    std::vector<T> ret;
+    ret.reserve(a.size() + b.size());
+    ret = a;
+    ret.insert(ret.end(), b.begin(), b.end());
+    return ret;
+}
+
+LineList<std::vector<coloredChar32_t >> list;
+std::map<uint8_t, std::pair<sf::Color, sf::Color>> palette {
+        { 0, { sf::Color::White, sf::Color::Transparent } },
+        { 1, { sf::Color::Black, sf::Color::Red } },
+        { 2, { sf::Color::Red, sf::Color::Transparent } },
+};
 sf::Font font;
 
 unsigned int numberLength(unsigned int i)
@@ -27,35 +45,82 @@ unsigned int numberLength(unsigned int i)
 
 void repaint(sf::RenderTarget & rt)
 {
+    const unsigned int CHARACTER_SIZE = 16;
+    const float LINE_SPACING = font.getLineSpacing(CHARACTER_SIZE);
+
     rt.clear();
+
+    sf::RectangleShape rect;
+    rect.setOrigin(0.f, 0.f);
 
     sf::Text text;
     text.setFont(font);
-    text.setCharacterSize(16);
+    text.setCharacterSize(CHARACTER_SIZE);
     text.setFillColor(sf::Color::White);
 
-    float linePos = 0.f;
+    float yOffset = 0.f;
 
-    const auto lineCount = doc->lineCount();
+    const auto lineCount = list.size();
     std::string line;
     for (int64_t l = 0; l < lineCount; ++l) {
+        uint8_t prevColor = 255;
+        float xOffset = 0.f;
+
         line.clear();
 
-        auto pos = doc->fromLineAndColumn(l, 0);
-        char32_t c = doc->at(pos);
+        auto paintFragment = [&]() {
+            if (line.empty()) {
+                return;
+            }
 
-        while (c != Document::eol) {
-            line += (char)c;
-            ++pos;
-            c = doc->at(pos);
+            const auto fillColor = palette[prevColor].first;
+            const auto bgColor = palette[prevColor].second;
+
+            // Setup text position and string to help rect calculate its size
+            text.setString(line);
+            text.setPosition(xOffset, yOffset);
+
+            // Draw rectangle
+            rect.setPosition(xOffset, yOffset);
+            rect.setSize({ text.findCharacterPos(line.size()).x - xOffset, LINE_SPACING });
+            rect.setFillColor(bgColor);
+            rt.draw(rect);
+
+            // Draw the text
+            text.setFillColor(fillColor);
+            rt.draw(text);
+
+            // Advance xOffset
+            xOffset = text.findCharacterPos(line.size()).x;
+            line.clear();
+        };
+
+        for (size_t col = 0; col < list[l].size(); ++col) {
+            const auto & c = list[l][col];
+            if (c.color != prevColor) {
+                paintFragment();
+                prevColor = c.color;
+            }
+            line.push_back((char)list[l][col].code);
         }
 
-        text.setString(line);
-        text.setPosition(0, linePos);
-        rt.draw(text);
-
-        linePos += 16;
+        paintFragment();
+        yOffset += LINE_SPACING;
     }
+}
+
+template<typename T>
+static std::vector<coloredChar_t<T>> colorize(uint8_t color, const T * sz)
+{
+    std::vector<coloredChar_t<T>> ret;
+    ret.reserve(std::char_traits<T>::length(sz));
+
+    while (*sz != T()) {
+        ret.push_back(coloredChar_t<T>{ *sz, color });
+        ++sz;
+    }
+
+    return ret;
 }
 
 int main(int argc, char ** argv)
@@ -64,7 +129,14 @@ int main(int argc, char ** argv)
     // Font
     font.loadFromFile("../data/fonts/Inconsolata-Regular.ttf");
 
-    doc = std::make_shared<VVDocument>("int main(int argc, char ** argv) {\n    return 0;\n}");
+    list.append(colorize(0, U"int main(int argc, char ** argv) {"));
+    list.append(
+            colorize(0, U"    ") +
+            colorize(2, U"return ") +
+            colorize(1, U"0") +
+            colorize(0, U";")
+    );
+    list.append(colorize(0, U"}"));
 
     LexingEngine lexingEngine;
 
