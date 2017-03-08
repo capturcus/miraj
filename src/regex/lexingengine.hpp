@@ -1,14 +1,16 @@
 #pragma once
 
 #include <uchar.h>
+#include <memory>
 
 #include "regex.h"
 
 class MaybeRegex {
 public:
-    virtual StepResult step(char c) = 0;
+    virtual StepResult step(char32_t c) = 0;
     virtual StepResult stepBack() = 0;
     virtual void reset() = 0;
+    virtual const char* getNamePtr() = 0;
 };
 
 class MaybeToken
@@ -16,14 +18,14 @@ class MaybeToken
 {
 public:
     MaybeToken(const std::string&, const std::string&);
-    ~MaybeToken();
-    StepResult step(char c);
+    StepResult step(char32_t c);
     StepResult stepBack();
     void reset();
+    virtual const char* getNamePtr();
 
     const std::string name;
     const std::string regexSrc;
-    RegEx* regex;
+    RegEx regex;
 };
 
 class MaybePunctuator
@@ -31,13 +33,15 @@ class MaybePunctuator
 {
 public:
     MaybePunctuator(const std::string&);
-    StepResult step(char c);
+    StepResult step(char32_t c);
     StepResult stepBack();
     void reset();
+    virtual const char* getNamePtr();
 
     const std::string punctuator;
 private:
     int counter = 0;
+    std::vector<StepResult> history;
 };
 
 class LexingEngine {
@@ -46,6 +50,5 @@ public:
     ~LexingEngine();
     void processKeypress(char32_t c);
 private:
-    std::vector<MaybeToken*> tokens;
-    std::vector<MaybePunctuator*> punctuators;
+    std::vector<std::unique_ptr<MaybeRegex>> tokens;
 };

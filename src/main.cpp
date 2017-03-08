@@ -148,17 +148,8 @@ int main(int argc, char ** argv)
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code < 26) {
-                    if(event.key.shift)
-                        lexingEngine.processKeypress(event.key.code + 'A');
-                    else
-                        lexingEngine.processKeypress(event.key.code + 'a');
-                } else if (event.key.code > 25 && event.key.code < 37)  {
-                    lexingEngine.processKeypress(event.key.code - 26 + '0');
-                } else if (event.key.code == 59) {
-                    lexingEngine.processKeypress(8);
-                }
+            if (event.type == sf::Event::TextEntered) {
+                lexingEngine.processKeypress(event.text.unicode);
             }
             repaint(window);
             window.display();
