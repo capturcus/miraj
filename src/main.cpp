@@ -139,6 +139,10 @@ int main(int argc, char ** argv)
     list.append(colorize(0, U"}"));
 
     LexingEngine lexingEngine;
+    ParsingEngine parsingEngine;
+
+    lexingEngine.parsingEngine = &parsingEngine;
+    parsingEngine.lexingEngine = &lexingEngine;
 
     window.setKeyRepeatEnabled(false);
 

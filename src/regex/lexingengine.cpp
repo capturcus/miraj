@@ -26,19 +26,39 @@ MaybeToken::MaybeToken(const std::string& name_, const std::string& regex_)
 }
 
 StepResult MaybeToken::step(char32_t c) {
-    return regex.Step(c);
+    StepResult res = regex.Step(c);
+    history.push_back({res, c});
+    return res;
 }
 
 StepResult MaybeToken::stepBack() {
+    history.pop_back();
     return regex.StepBack();
 }
 
 void MaybeToken::reset() {
+    history.clear();
+    history.push_back({UNDECIDED, '\0'});
     regex.Compile(regexSrc);
 }
 
 const char* MaybeToken::getNamePtr() {
     return name.c_str();
+}
+
+StepResult MaybeToken::lastResult() {
+    return history.back().first;
+}
+
+std::string MaybeToken::getValue() {
+    std::string value;
+    for (auto& p : history) {
+        if (p.second != '\0' && p.first != REJECTED) {
+            value += p.second;
+        }
+    }
+    std::cout << value << "\n";
+    return value;
 }
 
 ///////////////// MAYBE PUNCTUATOR
@@ -91,6 +111,14 @@ const char* MaybePunctuator::getNamePtr() {
     return punctuator.c_str();
 }
 
+StepResult MaybePunctuator::lastResult() {
+    return history.back();
+}
+
+std::string MaybePunctuator::getValue() {
+    return punctuator;
+}
+
 ///////////////// LEXING ENGINE
 
 LexingEngine::LexingEngine() {
@@ -108,11 +136,15 @@ LexingEngine::LexingEngine() {
     tokens.push_back(std::make_unique<MaybeToken>("NUMBER", "([0-9])+"));
 }
 
-LexingEngine::~LexingEngine() {
-}
-
 void LexingEngine::processKeypress(char32_t c) {
     std::cout << "\n";
+    std::vector<MaybeRegex*> acceptingTokens;
+    for (auto& token : tokens) {
+        if (token->lastResult() == ACCEPTED) {
+            acceptingTokens.push_back(token.get());
+        }
+    }
+    bool allRejected = true;
     for (auto& token : tokens) {
         StepResult result;
         if (c == 8) {
@@ -121,7 +153,23 @@ void LexingEngine::processKeypress(char32_t c) {
             result = token->step(c);
         }
         if (result != REJECTED) {
+            allRejected = false;
             printf("%s\t%s\r\n", token->getNamePtr(), printStepResult(result).c_str());
+        }
+    }
+    if (allRejected && acceptingTokens.size() > 0) {
+        parsingEngine->consumeToken({
+                std::string(acceptingTokens[0]->getNamePtr()),
+                std::string(acceptingTokens[0]->getValue())
+                });
+        for (auto& token : tokens) {
+            token.reset();
+            StepResult result;
+            if (c == 8) {
+                token->stepBack();
+            } else {
+                token->step(c);
+            }
         }
     }
 }
