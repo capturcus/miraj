@@ -103,13 +103,36 @@ LexingEngine::LexingEngine() {
         tokens.push_back(std::make_unique<FixedTokenMatcher>(punctuator));
     }
     // tokens.push_back(std::make_unique<MaybeToken>("IDENTIFIER", "([a-z])+"));
-    // tokens.push_back(std::make_unique<MaybeToken>("NUMBER", "([0-9])+"));
+    tokens.push_back(std::make_unique<NumeralLiteralMatcher>());
 }
 
 #define PENIS c==8
 
 void LexingEngine::processKeypress(char32_t c) {
+    // mvp whitespace breaks all tokens
     std::vector<AbstractMatcher*> acceptingTokens;
+    for (auto& token : tokens) {
+        if (token->GetState() == ACCEPTED) {
+            acceptingTokens.push_back(token.get());
+        }
+    }
+    if (isspace(c)) {
+        if (acceptingTokens.size() > 0) {
+            Token* t = acceptingTokens[0]->GetToken();
+            if (t == nullptr) {
+                std::cout << "COULD NOT GET TOKEN\n";
+            }
+            parsingEngine->consumeToken(t);
+            for (auto& token : tokens) {
+                token->Reset();
+            }
+            return;
+        } else {
+            std::cout << "NO VIABLE TOKENS ON WHITESPACE\n";
+            return;
+        }
+    }
+
     bool undecidedPresent = false;
     std::cout << "===\n";
     for (auto& token : tokens) {
@@ -123,21 +146,56 @@ void LexingEngine::processKeypress(char32_t c) {
             undecidedPresent = true;
         }
         token->DebugPrintUnrejected();
-
-        if (token->GetState() == ACCEPTED) {
-            acceptingTokens.push_back(token.get());
-        }
     }
-    // if there are some accepting tokens, take the first one, because they should be
-    // sorted in such an order that it's gonna be the correct one (a keyword or punctuation if possible)
-    if (!undecidedPresent && acceptingTokens.size() > 0) {
-        Token* t = acceptingTokens[0]->GetToken();
-        if (t == nullptr) {
-            std::cout << "COULD NOT GET TOKEN\n";
-        }
-        parsingEngine->consumeToken(t);
-        for (auto& token : tokens) {
-            token->Reset();
-        }
+}
+
+///////////////// NUMERAL LITERAL MATCHER
+
+NumeralLiteralMatcher::NumeralLiteralMatcher() {
+    history.push_back(UNDECIDED);
+}
+
+StepResult NumeralLiteralMatcher::Step(char32_t c) {
+    if (isdigit(c) && history.back() != REJECTED) {
+        value.push_back(c);
+        history.push_back(ACCEPTED);
+        return ACCEPTED;
+    } else {
+        history.push_back(REJECTED);
+        return REJECTED;
+    }
+}
+
+StepResult NumeralLiteralMatcher::StepBack() {
+    history.pop_back();
+    if (history.back() == ACCEPTED) {
+        value.pop_back();
+    }
+    return history.back();
+}
+
+StepResult NumeralLiteralMatcher::GetState() {
+    return history.back();
+}
+
+void NumeralLiteralMatcher::Reset() {
+    value = "";
+    history.clear();
+    history.push_back(UNDECIDED);
+}
+
+Token* NumeralLiteralMatcher::GetToken() {
+    if (history.back() == ACCEPTED) {
+        return new Token("numeralliteral", value);
+    } else {
+        std::cout << "TRYING TO GET NOT ACCEPTED TOKEN!\n";
+        std::cout << StepResultToString(history.back()) << "\n";
+        return nullptr;
+    }
+}
+
+void NumeralLiteralMatcher::DebugPrintUnrejected() {
+    if (history.back() != REJECTED) {
+        printf("NUMERAL %s %s\n", value.c_str(), StepResultToString(history.back()).c_str());
     }
 }

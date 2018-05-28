@@ -58,7 +58,7 @@ class NumeralLiteralMatcher
     : public AbstractMatcher
 {
 public:
-    NumeralLiteralMatcher(std::string p);
+    NumeralLiteralMatcher();
 
     StepResult Step(char32_t c);
     StepResult StepBack();
