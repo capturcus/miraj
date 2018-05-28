@@ -9,8 +9,8 @@
 #include <SFML/Graphics.hpp>
 
 #include "text/coloredchar.hpp"
-
-#include "regex/lexingengine.hpp"
+#include "lexer/lexingengine.hpp"
+#include "parser/parsingengine.hpp"
 
 #include "structures/linelist.hpp"
 
