@@ -71,6 +71,25 @@ public:
     std::vector<StepResult> history;
 };
 
+///////////////// IDENTIFIER MATCHER
+// matches only simple literals ([a-zA-Z])
+class IdentifierMatcher
+    : public AbstractMatcher
+{
+public:
+    IdentifierMatcher();
+
+    StepResult Step(char32_t c);
+    StepResult StepBack();
+    StepResult GetState();
+    void Reset();
+    Token* GetToken();
+    void DebugPrintUnrejected();
+
+    std::string value;
+    std::vector<StepResult> history;
+};
+
 ///////////////// LEXING ENGINE
 
 class ParsingEngine;

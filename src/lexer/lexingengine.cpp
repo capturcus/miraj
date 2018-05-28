@@ -102,7 +102,7 @@ LexingEngine::LexingEngine() {
     while(punctuatorsFile >> punctuator) {
         tokens.push_back(std::make_unique<FixedTokenMatcher>(punctuator));
     }
-    // tokens.push_back(std::make_unique<MaybeToken>("IDENTIFIER", "([a-z])+"));
+    tokens.push_back(std::make_unique<IdentifierMatcher>());
     tokens.push_back(std::make_unique<NumeralLiteralMatcher>());
 }
 
@@ -168,7 +168,7 @@ StepResult NumeralLiteralMatcher::Step(char32_t c) {
 
 StepResult NumeralLiteralMatcher::StepBack() {
     history.pop_back();
-    if (history.back() == ACCEPTED) {
+    if (history.back() != REJECTED) {
         value.pop_back();
     }
     return history.back();
@@ -197,5 +197,56 @@ Token* NumeralLiteralMatcher::GetToken() {
 void NumeralLiteralMatcher::DebugPrintUnrejected() {
     if (history.back() != REJECTED) {
         printf("NUMERAL %s %s\n", value.c_str(), StepResultToString(history.back()).c_str());
+    }
+}
+
+///////////////// IDENTIFIER MATCHER
+
+IdentifierMatcher::IdentifierMatcher() {
+    history.push_back(UNDECIDED);
+}
+
+StepResult IdentifierMatcher::Step(char32_t c) {
+    if (isalpha(c) && history.back() != REJECTED) {
+        value.push_back(c);
+        history.push_back(ACCEPTED);
+        return ACCEPTED;
+    } else {
+        history.push_back(REJECTED);
+        return REJECTED;
+    }
+}
+
+StepResult IdentifierMatcher::StepBack() {
+    history.pop_back();
+    if (history.back() != REJECTED) {
+        value.pop_back();
+    }
+    return history.back();
+}
+
+StepResult IdentifierMatcher::GetState() {
+    return history.back();
+}
+
+void IdentifierMatcher::Reset() {
+    value = "";
+    history.clear();
+    history.push_back(UNDECIDED);
+}
+
+Token* IdentifierMatcher::GetToken() {
+    if (history.back() == ACCEPTED) {
+        return new Token("identifier", value);
+    } else {
+        std::cout << "TRYING TO GET NOT ACCEPTED TOKEN!\n";
+        std::cout << StepResultToString(history.back()) << "\n";
+        return nullptr;
+    }
+}
+
+void IdentifierMatcher::DebugPrintUnrejected() {
+    if (history.back() != REJECTED) {
+        printf("IDENTIFIER %s %s\n", value.c_str(), StepResultToString(history.back()).c_str());
     }
 }
