@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <locale>
@@ -14,9 +15,10 @@
 
 #include "structures/linelist.hpp"
 
+using LineList32 = LineList<std::vector<coloredChar32_t>>;
+
 template<typename T>
-static inline std::vector<T> operator+(const std::vector<T> & a, const std::vector<T> & b)
-{
+static inline std::vector<T> operator+(const std::vector<T> & a, const std::vector<T> & b) {
     std::vector<T> ret;
     ret.reserve(a.size() + b.size());
     ret = a;
@@ -24,7 +26,12 @@ static inline std::vector<T> operator+(const std::vector<T> & a, const std::vect
     return ret;
 }
 
-LineList<std::vector<coloredChar32_t >> list;
+LineList32 list;
+bool menuListEnabled = false;
+LineList32 menuList;
+sf::Rect<float> menuRectangle;
+std::vector<sf::Color> menuBackgroundColors;
+
 std::map<uint8_t, std::pair<sf::Color, sf::Color>> palette {
         { 0, { sf::Color::White, sf::Color::Transparent } },
         { 1, { sf::Color::Black, sf::Color::Red } },
@@ -32,8 +39,7 @@ std::map<uint8_t, std::pair<sf::Color, sf::Color>> palette {
 };
 sf::Font font;
 
-unsigned int numberLength(unsigned int i)
-{
+unsigned int numberLength(unsigned int i) {
     unsigned int ret = 0;
     while (i != 0) {
         i /= 10;
@@ -43,28 +49,30 @@ unsigned int numberLength(unsigned int i)
     return std::max(1U, ret);
 }
 
-void repaint(sf::RenderTarget & rt)
-{
+void paintLineList(
+    sf::RenderTarget & rt,
+    LineList32 & llist,
+    float x, float y, float width,
+    bool drawLineOutlines
+) {
     const unsigned int CHARACTER_SIZE = 16;
     const float LINE_SPACING = font.getLineSpacing(CHARACTER_SIZE);
-
-    rt.clear();
-
-    sf::RectangleShape rect;
-    rect.setOrigin(0.f, 0.f);
 
     sf::Text text;
     text.setFont(font);
     text.setCharacterSize(CHARACTER_SIZE);
     text.setFillColor(sf::Color::White);
 
-    float yOffset = 0.f;
+    sf::RectangleShape rect;
+    rect.setOrigin(0.f, 0.f);
 
-    const auto lineCount = list.size();
+    float yOffset = y;
+
+    const auto lineCount = llist.size();
     std::string line;
     for (int64_t l = 0; l < lineCount; ++l) {
         uint8_t prevColor = 255;
-        float xOffset = 0.f;
+        float xOffset = x;
 
         line.clear();
 
@@ -76,6 +84,8 @@ void repaint(sf::RenderTarget & rt)
             const auto fillColor = palette[prevColor].first;
             const auto bgColor = palette[prevColor].second;
 
+            rect.setOutlineThickness(0.f);
+
             // Setup text position and string to help rect calculate its size
             text.setString(line);
             text.setPosition(xOffset, yOffset);
@@ -83,7 +93,12 @@ void repaint(sf::RenderTarget & rt)
             // Draw rectangle
             rect.setPosition(xOffset, yOffset);
             rect.setSize({ text.findCharacterPos(line.size()).x - xOffset, LINE_SPACING });
-            rect.setFillColor(bgColor);
+            if (drawLineOutlines) {
+                rect.setFillColor(sf::Color::Transparent);
+            }
+            else {
+                rect.setFillColor(bgColor);
+            }
             rt.draw(rect);
 
             // Draw the text
@@ -95,13 +110,23 @@ void repaint(sf::RenderTarget & rt)
             line.clear();
         };
 
-        for (size_t col = 0; col < list[l].size(); ++col) {
-            const auto & c = list[l][col];
+        if (drawLineOutlines) {
+            rect.setPosition(x, yOffset);
+            rect.setSize({ width, LINE_SPACING });
+            rect.setOutlineThickness(1.f);
+            rect.setOutlineColor(sf::Color::White);
+            assert(l < menuBackgroundColors.size());
+            rect.setFillColor(menuBackgroundColors[l]);
+            rt.draw(rect);
+        }
+
+        for (size_t col = 0; col < llist[l].size(); ++col) {
+            const auto & c = llist[l][col];
             if (c.color != prevColor) {
                 paintFragment();
                 prevColor = c.color;
             }
-            line.push_back((char)list[l][col].code);
+            line.push_back((char)llist[l][col].code);
         }
 
         paintFragment();
@@ -109,9 +134,20 @@ void repaint(sf::RenderTarget & rt)
     }
 }
 
+void repaint(sf::RenderTarget & rt) {
+    const unsigned int CHARACTER_SIZE = 16;
+    const float LINE_SPACING = font.getLineSpacing(CHARACTER_SIZE);
+
+    rt.clear();
+    paintLineList(rt, list, 0, 0, (float)rt.getSize().x, false);
+
+    if (menuListEnabled) {
+        paintLineList(rt, menuList, menuRectangle.left, menuRectangle.width, menuRectangle.width, true);
+    }
+}
+
 template<typename T>
-static std::vector<coloredChar_t<T>> colorize(uint8_t color, const T * sz)
-{
+static std::vector<coloredChar_t<T>> colorize(uint8_t color, const T * sz) {
     std::vector<coloredChar_t<T>> ret;
     ret.reserve(std::char_traits<T>::length(sz));
 
@@ -123,8 +159,7 @@ static std::vector<coloredChar_t<T>> colorize(uint8_t color, const T * sz)
     return ret;
 }
 
-int main(int argc, char ** argv)
-{
+int main(int argc, char ** argv) {
     sf::RenderWindow window(sf::VideoMode(800, 600, 32), "lol");
     // Font
     font.loadFromFile("../data/fonts/Inconsolata-Regular.ttf");
@@ -137,6 +172,15 @@ int main(int argc, char ** argv)
             colorize(0, U";")
     );
     list.append(colorize(0, U"}"));
+
+    menuListEnabled = true;
+    menuBackgroundColors.push_back(sf::Color::Cyan);
+    menuList.append(colorize(0, U"Ur mom gay"));
+    menuBackgroundColors.push_back(sf::Color::Magenta);
+    menuList.append(colorize(1, U"No u"));
+    menuRectangle = sf::Rect<float>(
+        100.f, 100.f, 16 * 10, 0.f
+    );
 
     LexingEngine lexingEngine;
     ParsingEngine parsingEngine;
