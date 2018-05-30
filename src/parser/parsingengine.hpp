@@ -9,7 +9,7 @@ class LexingEngine;
 
 class ParsingEngine {
 public:
-    void consumeToken(Token* t);
+    void consumeToken(Token t);
 
     LexingEngine* lexingEngine = nullptr;
 };

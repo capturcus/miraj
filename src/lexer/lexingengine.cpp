@@ -6,6 +6,10 @@
 #include "lexingengine.hpp"
 #include "../parser/parsingengine.hpp"
 
+std::ostream & operator << (std::ostream& os, const Token& t) {
+    os << "(" << t.type << "," << t.value << ")";
+}
+
 std::string StepResultToString(StepResult sr) {
     switch (sr) {
         case ACCEPTED:
@@ -29,6 +33,10 @@ FixedTokenMatcher::FixedTokenMatcher(std::string p)
     : pattern(p)
 {
     history.push_back(UNDECIDED);
+}
+
+bool FixedTokenMatcher::InstantDetach() {
+    return true;
 }
 
 StepResult FixedTokenMatcher::Step(char32_t c){
@@ -69,14 +77,14 @@ void FixedTokenMatcher::Reset(){
     history.push_back(UNDECIDED);
 }
 
-Token* FixedTokenMatcher::GetToken(){
-    if (history.back() == ACCEPTED) {
-        return new Token(pattern, std::string(""));
-    } else {
-        std::cout << "TRYING TO GET NOT ACCEPTED TOKEN!\n";
-        std::cout << StepResultToString(history.back()) << "\n";
-        return nullptr;
-    }
+Token* FixedTokenMatcher::GetToken() {
+    // if (history.back() == ACCEPTED) {
+    return new Token(pattern, std::string(""));
+    // } else {
+    //     std::cout << "TRYING TO GET NOT ACCEPTED FIXED TOKEN " << pattern << "\n";
+    //     std::cout << StepResultToString(history.back()) << "\n";
+    //     return nullptr;
+    // }
 }
 
 StepResult FixedTokenMatcher::GetState(){
@@ -106,34 +114,23 @@ LexingEngine::LexingEngine() {
     tokens.push_back(std::make_unique<NumeralLiteralMatcher>());
 }
 
-#define PENIS c==8
-
-void LexingEngine::processKeypress(char32_t c) {
-    // mvp whitespace breaks all tokens
+std::vector<AbstractMatcher*> LexingEngine::GetAcceptingTokens() {
     std::vector<AbstractMatcher*> acceptingTokens;
     for (auto& token : tokens) {
         if (token->GetState() == ACCEPTED) {
             acceptingTokens.push_back(token.get());
         }
     }
-    if (isspace(c)) {
-        if (acceptingTokens.size() > 0) {
-            Token* t = acceptingTokens[0]->GetToken();
-            if (t == nullptr) {
-                std::cout << "COULD NOT GET TOKEN\n";
-            }
-            parsingEngine->consumeToken(t);
-            for (auto& token : tokens) {
-                token->Reset();
-            }
-            return;
-        } else {
-            std::cout << "NO VIABLE TOKENS ON WHITESPACE\n";
-            return;
-        }
-    }
+    return acceptingTokens;
+}
 
-    bool undecidedPresent = false;
+#define PENIS c==8
+
+void LexingEngine::ProcessKeypress(char32_t c) {
+    
+    auto acceptingTokens = this->GetAcceptingTokens();
+
+    bool allRejected = true;
     std::cout << "===\n";
     for (auto& token : tokens) {
         StepResult result;
@@ -142,10 +139,75 @@ void LexingEngine::processKeypress(char32_t c) {
         } else {
             result = token->Step(c);
         }
-        if (result == UNDECIDED) {
-            undecidedPresent = true;
+        if (result != REJECTED) {
+            allRejected = false;
         }
         token->DebugPrintUnrejected();
+    }
+
+    // check instant detach
+    auto acceptingTokens2 = this->GetAcceptingTokens();
+    bool instantDetach = false;
+    for (auto& token : acceptingTokens2) {
+        if (token->InstantDetach()) {
+            auto t = token->GetToken();
+            if(instantDetach) {
+                std::cout << "DOUBLE INSTANT DETACH, VERY WRONG!!! " << *t << " EXITING\n";
+                exit(1);
+            }
+            parsingEngine->consumeToken(*t);
+            instantDetach = true;
+            delete t;
+        }
+    }
+    if (instantDetach) {
+        for (auto& token : tokens) {
+            token->Reset();
+        }
+        return;
+    }
+
+    if (allRejected) {
+        // all matchers rejected, check whether before stepping the character there was a viable matcher
+        if (acceptingTokens.size() == 0) {
+            // nothing accepted, reject character
+            std::cout << "REJECT CHARACTER\n";
+        }
+        if (acceptingTokens.size() == 1) {
+            // there is exactly one, emit it
+            Token* t = acceptingTokens[0]->GetToken();
+            if (t == nullptr) {
+                std::cout << "COULD NOT GET TOKEN\n";
+            }
+            parsingEngine->consumeToken(*t);
+            delete t;
+
+            // one token accepted and emitted. Reset tokens, process current character. Possibly emit another token on instant detach.
+            instantDetach = false;
+            for (auto& token : tokens) {
+                token->Reset();
+                token->Step(c);
+                if (token->GetState() == ACCEPTED && token->InstantDetach()) {
+                    if(instantDetach) {
+                        std::cout << "DOUBLE INSTANT DETACH 2, VERY WRONG!!! EXITING\n";
+                        exit(1);
+                    }
+                    instantDetach = true;
+                    // emit!
+                    auto t = token->GetToken();
+                    parsingEngine->consumeToken(*t);
+                    delete t;
+                }
+            }
+            if (instantDetach) {
+                for (auto& token : tokens) {
+                    token->Reset();
+                }
+            }
+        }
+        if (acceptingTokens.size() > 1) {
+            std::cout << "REJECT CHARACTER AND MAKE USER CHOOSE\n";
+        }
     }
 }
 
@@ -153,6 +215,10 @@ void LexingEngine::processKeypress(char32_t c) {
 
 NumeralLiteralMatcher::NumeralLiteralMatcher() {
     history.push_back(UNDECIDED);
+}
+
+bool NumeralLiteralMatcher::InstantDetach() {
+    return false;
 }
 
 StepResult NumeralLiteralMatcher::Step(char32_t c) {
@@ -168,7 +234,7 @@ StepResult NumeralLiteralMatcher::Step(char32_t c) {
 
 StepResult NumeralLiteralMatcher::StepBack() {
     history.pop_back();
-    if (history.back() != REJECTED) {
+    if (history.back() != REJECTED && value.size() > 0) {
         value.pop_back();
     }
     return history.back();
@@ -181,17 +247,18 @@ StepResult NumeralLiteralMatcher::GetState() {
 void NumeralLiteralMatcher::Reset() {
     value = "";
     history.clear();
+    value.clear();
     history.push_back(UNDECIDED);
 }
 
 Token* NumeralLiteralMatcher::GetToken() {
-    if (history.back() == ACCEPTED) {
-        return new Token("numeralliteral", value);
-    } else {
-        std::cout << "TRYING TO GET NOT ACCEPTED TOKEN!\n";
-        std::cout << StepResultToString(history.back()) << "\n";
-        return nullptr;
-    }
+    // if (history.back() == ACCEPTED) {
+    return new Token("numeralliteral", value);
+    // } else {
+    //     std::cout << "TRYING TO GET NOT ACCEPTED NUMERAL TOKEN! " << value << "\n";
+    //     std::cout << StepResultToString(history.back()) << "\n";
+    //     return nullptr;
+    // }
 }
 
 void NumeralLiteralMatcher::DebugPrintUnrejected() {
@@ -204,6 +271,10 @@ void NumeralLiteralMatcher::DebugPrintUnrejected() {
 
 IdentifierMatcher::IdentifierMatcher() {
     history.push_back(UNDECIDED);
+}
+
+bool IdentifierMatcher::InstantDetach() {
+    return false;
 }
 
 StepResult IdentifierMatcher::Step(char32_t c) {
@@ -219,7 +290,7 @@ StepResult IdentifierMatcher::Step(char32_t c) {
 
 StepResult IdentifierMatcher::StepBack() {
     history.pop_back();
-    if (history.back() != REJECTED) {
+    if (history.back() != REJECTED && value.size() > 0) {
         value.pop_back();
     }
     return history.back();
@@ -232,17 +303,18 @@ StepResult IdentifierMatcher::GetState() {
 void IdentifierMatcher::Reset() {
     value = "";
     history.clear();
+    value.clear();
     history.push_back(UNDECIDED);
 }
 
 Token* IdentifierMatcher::GetToken() {
-    if (history.back() == ACCEPTED) {
-        return new Token("identifier", value);
-    } else {
-        std::cout << "TRYING TO GET NOT ACCEPTED TOKEN!\n";
-        std::cout << StepResultToString(history.back()) << "\n";
-        return nullptr;
-    }
+    // if (history.back() == ACCEPTED) {
+    return new Token("identifier", value);
+    // } else {
+    //     std::cout << "TRYING TO GET NOT ACCEPTED IDENTIFIER TOKEN! " << value << "\n";
+    //     std::cout << StepResultToString(history.back()) << "\n";
+    //     return nullptr;
+    // }
 }
 
 void IdentifierMatcher::DebugPrintUnrejected() {

@@ -20,6 +20,8 @@ public:
     std::string value;
 };
 
+std::ostream & operator << (std::ostream &, const Token &);
+
 ///////////////// ABSTRACT MATCHER
 
 class AbstractMatcher {
@@ -30,6 +32,9 @@ public:
     virtual void Reset() = 0;
     virtual StepResult GetState() = 0;
     virtual void DebugPrintUnrejected() = 0;
+    virtual bool InstantDetach() = 0;
+
+    std::string value;
 };
 
 ///////////////// FIXED TOKEN MATCHER
@@ -46,6 +51,7 @@ public:
     void Reset();
     Token* GetToken();
     void DebugPrintUnrejected();
+    bool InstantDetach();
 
     std::string pattern;
     int position = 0;
@@ -66,8 +72,8 @@ public:
     void Reset();
     Token* GetToken();
     void DebugPrintUnrejected();
+    bool InstantDetach();
 
-    std::string value;
     std::vector<StepResult> history;
 };
 
@@ -85,8 +91,8 @@ public:
     void Reset();
     Token* GetToken();
     void DebugPrintUnrejected();
+    bool InstantDetach();
 
-    std::string value;
     std::vector<StepResult> history;
 };
 
@@ -97,7 +103,8 @@ class ParsingEngine;
 class LexingEngine {
 public:
     LexingEngine();
-    void processKeypress(char32_t c);
+    void ProcessKeypress(char32_t c);
+    std::vector<AbstractMatcher*> GetAcceptingTokens();
 
     ParsingEngine* parsingEngine = nullptr;
 private:

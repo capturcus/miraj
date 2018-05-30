@@ -153,7 +153,7 @@ int main(int argc, char ** argv)
                 window.close();
             }
             if (event.type == sf::Event::TextEntered) {
-                lexingEngine.processKeypress(event.text.unicode);
+                lexingEngine.ProcessKeypress(event.text.unicode);
             }
             repaint(window);
             window.display();
