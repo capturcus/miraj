@@ -1,5 +1,4 @@
 make LexingEngine expose a list of options viable for rendering
 make LexingEngine expose a function for choosing from said list
 
-known bugs:
-123 -> \b\b\b -> s
+fix instantdetach so that the following work: iface, ==
