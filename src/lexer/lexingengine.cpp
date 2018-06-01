@@ -27,6 +27,16 @@ Token::Token(std::string t, std::string v)
     : type(t), value(v)
 {}
 
+///////////////// AbstractMatcher
+
+bool AbstractMatcher::JustRejected() {
+    if (history.size() < 2) {
+        return false;
+    }
+    size_t s = history.size();
+    return history[s-1] == REJECTED && history[s-2] == ACCEPTED;
+}
+
 ///////////////// FixedTokenMatcher
 
 FixedTokenMatcher::FixedTokenMatcher(std::string p)

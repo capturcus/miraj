@@ -34,7 +34,10 @@ public:
     virtual void DebugPrintUnrejected() = 0;
     virtual bool InstantDetach() = 0;
 
+    bool JustRejected();
+
     std::string value;
+    std::vector<StepResult> history;
 };
 
 ///////////////// FIXED TOKEN MATCHER
@@ -55,7 +58,6 @@ public:
 
     std::string pattern;
     int position = 0;
-    std::vector<StepResult> history;
 };
 
 ///////////////// NUMERAL LITERAL MATCHER
@@ -73,8 +75,6 @@ public:
     Token* GetToken();
     void DebugPrintUnrejected();
     bool InstantDetach();
-
-    std::vector<StepResult> history;
 };
 
 ///////////////// IDENTIFIER MATCHER
@@ -92,8 +92,6 @@ public:
     Token* GetToken();
     void DebugPrintUnrejected();
     bool InstantDetach();
-
-    std::vector<StepResult> history;
 };
 
 ///////////////// LEXING ENGINE
