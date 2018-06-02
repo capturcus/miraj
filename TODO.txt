@@ -2,3 +2,4 @@ make LexingEngine expose a list of options viable for rendering
 make LexingEngine expose a function for choosing from said list
 whitespaces
 backspaces
+make parser own lexer
