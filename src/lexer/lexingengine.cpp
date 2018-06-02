@@ -113,110 +113,85 @@ LexingEngine::LexingEngine() {
     std::ifstream keywordsFile("../data/keywords.txt");
     std::string keyword;
     while(keywordsFile >> keyword) {
-        tokens.push_back(std::make_unique<FixedTokenMatcher>(keyword));
+        matchers.push_back(std::make_unique<FixedTokenMatcher>(keyword));
     }
     std::ifstream punctuatorsFile("../data/punctuators.txt");
     std::string punctuator;
     while(punctuatorsFile >> punctuator) {
-        tokens.push_back(std::make_unique<FixedTokenMatcher>(punctuator));
+        matchers.push_back(std::make_unique<FixedTokenMatcher>(punctuator));
     }
-    tokens.push_back(std::make_unique<IdentifierMatcher>());
-    tokens.push_back(std::make_unique<NumeralLiteralMatcher>());
+    matchers.push_back(std::make_unique<IdentifierMatcher>());
+    matchers.push_back(std::make_unique<NumeralLiteralMatcher>());
 }
 
-std::vector<AbstractMatcher*> LexingEngine::GetAcceptingTokens() {
-    std::vector<AbstractMatcher*> acceptingTokens;
-    for (auto& token : tokens) {
-        if (token->GetState() == ACCEPTED) {
-            acceptingTokens.push_back(token.get());
+std::vector<AbstractMatcher*> LexingEngine::GetAcceptingMatchers() {    
+    std::vector<AbstractMatcher*> acceptingMatchers;
+    for (auto& matcher : matchers) {
+        if (matcher->GetState() == ACCEPTED) {
+            acceptingMatchers.push_back(matcher.get());
         }
     }
-    return acceptingTokens;
+    return acceptingMatchers;
 }
 
 #define PENIS c==8
 
 void LexingEngine::ProcessKeypress(char32_t c) {
     
-    auto acceptingTokens = this->GetAcceptingTokens();
-
     bool allRejected = true;
     std::cout << "===\n";
-    for (auto& token : tokens) {
+    for (auto& matcher : matchers) {
         StepResult result;
         if (PENIS) { // backspace
-            result = token->StepBack();
+            result = matcher->StepBack();
         } else {
-            result = token->Step(c);
+            result = matcher->Step(c);
         }
         if (result != REJECTED) {
             allRejected = false;
         }
-        token->DebugPrintUnrejected();
-    }
-
-    // check instant detach
-    auto acceptingTokens2 = this->GetAcceptingTokens();
-    bool instantDetach = false;
-    for (auto& token : acceptingTokens2) {
-        if (token->InstantDetach()) {
-            auto t = token->GetToken();
-            if(instantDetach) {
-                std::cout << "DOUBLE INSTANT DETACH, VERY WRONG!!! " << *t << " EXITING\n";
-                exit(1);
-            }
-            parsingEngine->consumeToken(*t);
-            instantDetach = true;
-            delete t;
-        }
-    }
-    if (instantDetach) {
-        for (auto& token : tokens) {
-            token->Reset();
-        }
-        return;
+        matcher->DebugPrintUnrejected();
     }
 
     if (allRejected) {
-        // all matchers rejected, check whether before stepping the character there was a viable matcher
-        if (acceptingTokens.size() == 0) {
-            // nothing accepted, reject character
-            std::cout << "REJECT CHARACTER\n";
-        }
-        if (acceptingTokens.size() == 1) {
-            // there is exactly one, emit it
-            Token* t = acceptingTokens[0]->GetToken();
-            if (t == nullptr) {
-                std::cout << "COULD NOT GET TOKEN\n";
+        std::vector<AbstractMatcher*> justRejected;
+        for (auto& matcher : matchers) {
+            if (matcher->JustRejected()) {
+                justRejected.push_back(matcher.get());
             }
+        }
+        if (justRejected.size() > 0) {
+            // temporary behavior? ask user?
+            auto matcher = justRejected[0];
+            matcher->StepBack(); // now is ACCEPTED
+            Token* t = matcher->GetToken();
             parsingEngine->consumeToken(*t);
             delete t;
-
-            // one token accepted and emitted. Reset tokens, process current character. Possibly emit another token on instant detach.
-            instantDetach = false;
-            for (auto& token : tokens) {
-                token->Reset();
-                token->Step(c);
-                if (token->GetState() == ACCEPTED && token->InstantDetach()) {
-                    if(instantDetach) {
-                        std::cout << "DOUBLE INSTANT DETACH 2, VERY WRONG!!! EXITING\n";
-                        exit(1);
-                    }
-                    instantDetach = true;
-                    // emit!
-                    auto t = token->GetToken();
-                    parsingEngine->consumeToken(*t);
-                    delete t;
-                }
-            }
-            if (instantDetach) {
-                for (auto& token : tokens) {
-                    token->Reset();
-                }
+            for (auto& matcher : matchers) {
+                matcher->Reset();
+                matcher->Step(c);
             }
         }
-        if (acceptingTokens.size() > 1) {
-            std::cout << "REJECT CHARACTER AND MAKE USER CHOOSE\n";
+    }
+
+    // check instant detach
+    bool noUndecided = true;
+    std::vector<AbstractMatcher*> accepts;
+    for (auto& matcher : matchers) {
+        if (matcher->GetState() == UNDECIDED) {
+            noUndecided = false;
+            break;
+        }
+        if (matcher->GetState() == ACCEPTED) {
+            accepts.push_back(matcher.get());
+        }
+    }
+    if (noUndecided && accepts.size() == 1 && accepts[0]->InstantDetach()) {
+        Token* t = accepts[0]->GetToken();
+        parsingEngine->consumeToken(*t);
+        delete t;
+        for (auto& matcher : matchers) {
+            matcher->Reset();
         }
     }
 }
@@ -243,10 +218,10 @@ StepResult NumeralLiteralMatcher::Step(char32_t c) {
 }
 
 StepResult NumeralLiteralMatcher::StepBack() {
-    history.pop_back();
     if (history.back() != REJECTED && value.size() > 0) {
         value.pop_back();
     }
+    history.pop_back();
     return history.back();
 }
 
@@ -299,10 +274,10 @@ StepResult IdentifierMatcher::Step(char32_t c) {
 }
 
 StepResult IdentifierMatcher::StepBack() {
-    history.pop_back();
     if (history.back() != REJECTED && value.size() > 0) {
         value.pop_back();
     }
+    history.pop_back();
     return history.back();
 }
 
