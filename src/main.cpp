@@ -139,6 +139,7 @@ int main(int argc, char ** argv)
     list.append(colorize(0, U"}"));
 
     ParsingEngine parsingEngine;
+    parsingEngine.InitGrammar("../data/grammar.json");
 
     window.setKeyRepeatEnabled(false);
 

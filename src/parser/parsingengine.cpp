@@ -12,3 +12,6 @@ void ParsingEngine::ProcessKeypress(char32_t c) {
 ParsingEngine::ParsingEngine() {
     lexingEngine = std::make_unique<LexingEngine>();
 }
+
+void ParsingEngine::InitGrammar(std::string path) {
+}

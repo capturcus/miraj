@@ -102,6 +102,7 @@ class LexingEngine {
 public:
     LexingEngine();
     std::vector<Token> ProcessKeypress(char32_t c);
+    void Init(std::vector<std::string> patterns);
 
 private:
     std::vector<std::unique_ptr<AbstractMatcher>> matchers;

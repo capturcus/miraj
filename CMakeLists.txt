@@ -14,4 +14,4 @@ file(GLOB miraj_SRC
     )
 
 add_executable(miraj ${miraj_SRC})
-target_link_libraries(miraj ${SFML_LIBRARIES})
+target_link_libraries(miraj ${SFML_LIBRARIES} libjsoncpp)

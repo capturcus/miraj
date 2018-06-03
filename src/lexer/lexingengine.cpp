@@ -109,16 +109,12 @@ void FixedTokenMatcher::DebugPrintUnrejected(){
 
 ///////////////// LEXING ENGINE
 
-LexingEngine::LexingEngine() {
-    std::ifstream keywordsFile("../data/keywords.txt");
-    std::string keyword;
-    while(keywordsFile >> keyword) {
-        matchers.push_back(std::make_unique<FixedTokenMatcher>(keyword));
-    }
-    std::ifstream punctuatorsFile("../data/punctuators.txt");
-    std::string punctuator;
-    while(punctuatorsFile >> punctuator) {
-        matchers.push_back(std::make_unique<FixedTokenMatcher>(punctuator));
+LexingEngine::LexingEngine() {}
+
+void LexingEngine::Init(std::vector<std::string> patterns) {
+    matchers.clear();
+    for (auto& pattern : patterns) {
+        matchers.push_back(std::make_unique<FixedTokenMatcher>(pattern));
     }
     matchers.push_back(std::make_unique<IdentifierMatcher>());
     matchers.push_back(std::make_unique<NumeralLiteralMatcher>());
