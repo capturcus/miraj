@@ -139,7 +139,13 @@ int main(int argc, char ** argv)
     list.append(colorize(0, U"}"));
 
     ParsingEngine parsingEngine;
-    parsingEngine.InitGrammar("../data/grammar.json");
+    try {
+        parsingEngine.InitGrammar("../data/grammar.json");
+    }
+    catch (const char* c) {
+        printf("Caught string exception: %s\n", c);
+        return 1;
+    }
 
     window.setKeyRepeatEnabled(false);
 

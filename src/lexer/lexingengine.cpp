@@ -8,6 +8,7 @@
 
 std::ostream & operator << (std::ostream& os, const Token& t) {
     os << "(" << t.type << "," << t.value << ")";
+    return os;
 }
 
 std::string StepResultToString(StepResult sr) {
