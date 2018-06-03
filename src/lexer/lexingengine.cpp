@@ -39,9 +39,10 @@ bool AbstractMatcher::JustRejected() {
 
 ///////////////// FixedTokenMatcher
 
-FixedTokenMatcher::FixedTokenMatcher(std::string p)
+FixedTokenMatcher::FixedTokenMatcher(std::string n, std::string p)
     : pattern(p)
 {
+    name = n;
     history.push_back(UNDECIDED);
 }
 
@@ -111,10 +112,10 @@ void FixedTokenMatcher::DebugPrintUnrejected(){
 
 LexingEngine::LexingEngine() {}
 
-void LexingEngine::Init(std::vector<std::string> patterns) {
+void LexingEngine::Init(std::vector<std::pair<std::string, std::string>> patterns) {
     matchers.clear();
     for (auto& pattern : patterns) {
-        matchers.push_back(std::make_unique<FixedTokenMatcher>(pattern));
+        matchers.push_back(std::make_unique<FixedTokenMatcher>(pattern.first, pattern.second));
     }
     matchers.push_back(std::make_unique<IdentifierMatcher>());
     matchers.push_back(std::make_unique<NumeralLiteralMatcher>());
@@ -186,6 +187,7 @@ std::vector<Token> LexingEngine::ProcessKeypress(char32_t c) {
 ///////////////// NUMERAL LITERAL MATCHER
 
 NumeralLiteralMatcher::NumeralLiteralMatcher() {
+    name = "NUMERAL";
     history.push_back(UNDECIDED);
 }
 
@@ -242,6 +244,7 @@ void NumeralLiteralMatcher::DebugPrintUnrejected() {
 ///////////////// IDENTIFIER MATCHER
 
 IdentifierMatcher::IdentifierMatcher() {
+    name = "IDENTIFIER";
     history.push_back(UNDECIDED);
 }
 

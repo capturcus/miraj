@@ -37,6 +37,7 @@ public:
     bool JustRejected();
 
     std::string value;
+    std::string name;
     std::vector<StepResult> history;
 };
 
@@ -46,7 +47,7 @@ class FixedTokenMatcher
     : public AbstractMatcher
 {
 public:
-    FixedTokenMatcher(std::string p);
+    FixedTokenMatcher(std::string n, std::string p);
 
     StepResult Step(char32_t c);
     StepResult StepBack();
@@ -102,7 +103,7 @@ class LexingEngine {
 public:
     LexingEngine();
     std::vector<Token> ProcessKeypress(char32_t c);
-    void Init(std::vector<std::string> patterns);
+    void Init(std::vector<std::pair<std::string, std::string>> patterns);
 
 private:
     std::vector<std::unique_ptr<AbstractMatcher>> matchers;

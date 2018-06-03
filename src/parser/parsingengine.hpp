@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../lexer/lexingengine.hpp"
+#include "grammar.hpp"
 
 class LexingEngine;
 
@@ -14,5 +15,9 @@ public:
     void ProcessKeypress(char32_t c);
     void InitGrammar(std::string path);
 
+private:
+    Nut* makeAndGetNut(std::string lhs, bool terminal);
+    Nut* getNut(std::string lhs);
     std::unique_ptr<LexingEngine> lexingEngine;
+    std::vector<std::unique_ptr<Nut>> nuts;
 };

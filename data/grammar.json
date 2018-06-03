@@ -1,6 +1,7 @@
 {
     "tokens":[
-        {"PLUS":"+"}
+        {"PLUS":"+"},
+        {"WHILE":"while"}
     ],
     "productions": [
         {
