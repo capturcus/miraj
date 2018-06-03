@@ -2,6 +2,13 @@
 
 #include "parsingengine.hpp"
 
-void ParsingEngine::consumeToken(Token token) {
-    std::cout << "CONSUMED " << token.type << " " << token.value << "\n";
+void ParsingEngine::ProcessKeypress(char32_t c) {
+    auto tokens = lexingEngine->ProcessKeypress(c);
+    for (auto& token : tokens) {
+        std::cout << "CONSUMED " << token << "\n";
+    }
+}
+
+ParsingEngine::ParsingEngine() {
+    lexingEngine = std::make_unique<LexingEngine>();
 }

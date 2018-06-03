@@ -138,11 +138,7 @@ int main(int argc, char ** argv)
     );
     list.append(colorize(0, U"}"));
 
-    LexingEngine lexingEngine;
     ParsingEngine parsingEngine;
-
-    lexingEngine.parsingEngine = &parsingEngine;
-    parsingEngine.lexingEngine = &lexingEngine;
 
     window.setKeyRepeatEnabled(false);
 
@@ -153,7 +149,7 @@ int main(int argc, char ** argv)
                 window.close();
             }
             if (event.type == sf::Event::TextEntered) {
-                lexingEngine.ProcessKeypress(event.text.unicode);
+                parsingEngine.ProcessKeypress(event.text.unicode);
             }
             repaint(window);
             window.display();

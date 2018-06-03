@@ -101,10 +101,8 @@ class ParsingEngine;
 class LexingEngine {
 public:
     LexingEngine();
-    void ProcessKeypress(char32_t c);
-    std::vector<AbstractMatcher*> GetAcceptingMatchers();
+    std::vector<Token> ProcessKeypress(char32_t c);
 
-    ParsingEngine* parsingEngine = nullptr;
 private:
     std::vector<std::unique_ptr<AbstractMatcher>> matchers;
 };

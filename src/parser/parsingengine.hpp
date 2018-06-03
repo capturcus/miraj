@@ -9,7 +9,9 @@ class LexingEngine;
 
 class ParsingEngine {
 public:
-    void consumeToken(Token t);
+    ParsingEngine();
+    void ConsumeToken(Token t);
+    void ProcessKeypress(char32_t c);
 
-    LexingEngine* lexingEngine = nullptr;
+    std::unique_ptr<LexingEngine> lexingEngine;
 };

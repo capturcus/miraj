@@ -124,20 +124,10 @@ LexingEngine::LexingEngine() {
     matchers.push_back(std::make_unique<NumeralLiteralMatcher>());
 }
 
-std::vector<AbstractMatcher*> LexingEngine::GetAcceptingMatchers() {    
-    std::vector<AbstractMatcher*> acceptingMatchers;
-    for (auto& matcher : matchers) {
-        if (matcher->GetState() == ACCEPTED) {
-            acceptingMatchers.push_back(matcher.get());
-        }
-    }
-    return acceptingMatchers;
-}
-
 #define PENIS c==8
 
-void LexingEngine::ProcessKeypress(char32_t c) {
-    
+std::vector<Token> LexingEngine::ProcessKeypress(char32_t c) {
+    std::vector<Token> ret;
     bool allRejected = true;
     std::cout << "===\n";
     for (auto& matcher : matchers) {
@@ -165,7 +155,7 @@ void LexingEngine::ProcessKeypress(char32_t c) {
             auto matcher = justRejected[0];
             matcher->StepBack(); // now is ACCEPTED
             Token* t = matcher->GetToken();
-            parsingEngine->consumeToken(*t);
+            ret.push_back(*t);
             delete t;
             for (auto& matcher : matchers) {
                 matcher->Reset();
@@ -188,12 +178,13 @@ void LexingEngine::ProcessKeypress(char32_t c) {
     }
     if (noUndecided && accepts.size() == 1 && accepts[0]->InstantDetach()) {
         Token* t = accepts[0]->GetToken();
-        parsingEngine->consumeToken(*t);
+        ret.push_back(*t);
         delete t;
         for (auto& matcher : matchers) {
             matcher->Reset();
         }
     }
+    return ret;
 }
 
 ///////////////// NUMERAL LITERAL MATCHER
