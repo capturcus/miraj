@@ -20,7 +20,6 @@ Nut* ParsingEngine::makeAndGetNut(std::string lhs, bool terminal) {
     if (ret != nullptr) {
         return ret;
     }
-    std::cout << "making nut " << lhs << "\n";
     if (terminal) {
         nuts.push_back(std::make_unique<Terminal>(lhs));
     } else {
@@ -36,7 +35,6 @@ Nut* ParsingEngine::getNut(std::string lhs) {
             return nut.get();
         }
     }
-    std::cout << "not found nut " << lhs << "\n";
     return nullptr;
 }
 

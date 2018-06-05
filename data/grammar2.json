@@ -1,0 +1,54 @@
+{
+    "terminals": [{
+            "PLUS": "+"
+        },
+        {
+            "WHILE": "while"
+        },
+        {
+            "LPAREN": "("
+        },
+        {
+            "RPAREN": ")"
+        },
+        {
+            "LBRACE": "{"
+        },
+        {
+            "RBRACE": "}"
+        }
+    ],
+    "nonterminals": {
+        "start": [{
+                "production": ["stmts"]
+            },
+            {
+                "production": ["if_stmt"]
+            }
+        ],
+        "if_stmt": [{
+            "production": ["IF", "LPAREN", "expression", "RPAREN", "LBRACE", "stmts", "RBRACE"],
+            "display": "if (@2) {\n@@5\n}"
+        }],
+        "stmts": [{
+            "production": "__list",
+            "child": "stmt",
+            "separator": "NEWLINE"
+        }],
+        "stmt": [{
+            "production": ["IDENTIFIER"]
+        }],
+        "expression": [{
+            "production": "__list",
+            "child": "component",
+            "separator": "PLUS"
+        }],
+        "factor": [{
+                "production": ["IDENTIFIER"]
+            },
+            {
+                "production": ["NUMERAL"]
+            }
+        ]
+    }
+}
