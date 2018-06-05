@@ -1,25 +1,16 @@
 {
-    "tokens":[
-        {"PLUS":"+"},
-        {"WHILE":"while"}
-    ],
-    "productions": [
-        {
-            "start": [
-                ["expression"]
-            ]
-        },
-        {
-            "expression": [
-                ["factor"],
-                ["factor", "PLUS", "expression"]
-            ]
-        },
-        {
-            "factor": [
-                ["IDENTIFIER"],
-                ["NUMERAL"]
-            ]
-        }
-    ]
+    "tokens": {
+        "LPAREN": "(",
+        "RPAREN": ")",
+        "PLUS": "+"
+    },
+    "productions": {
+        "start": [
+            ["expression"]
+        ],
+        "expression": [
+            ["LPAREN", "expression", "RPAREN"],
+            ["PLUS"]
+        ]
+    }
 }

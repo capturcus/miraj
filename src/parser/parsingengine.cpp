@@ -47,42 +47,18 @@ bool validTokenName(std::string name) {
     return true;
 }
 
-void ParsingEngine::InitGrammar(std::string path) {
+void ParsingEngine::InitGrammar(const std::string& path) {
     std::ifstream ifs(path);
     Json::Reader reader;
 	Json::Value obj;
 
 	reader.parse(ifs, obj);
-
-    std::vector<std::pair<std::string, std::string>> tokens;
-    for (auto& token : obj["tokens"]) {
-        auto tokenName = token.getMemberNames()[0];
-        if(!validTokenName(tokenName)) {
-            throw "invalid token name, all chars chould be uppercase";
-        }
-        auto tokenPattern = token[tokenName].asString();
-        tokens.push_back({tokenName, tokenPattern});
-        makeAndGetNut(tokenName, true); // ignore the return value, just create the nut
-    }
-    lexingEngine->Init(tokens);
+    gdesc = GrammarDescription::FromJsonValue(obj);
+    lexingEngine->Init(gdesc.GetTokenList());
 
     std::cout << "\n\nPRODUCTIONS\n";
 
-    int currentProd = 0;
-    for (auto& j : obj["productions"]) {
-        auto name = j.getMemberNames()[0];
-        NonTerminal* nonTerminal = static_cast<NonTerminal*>(makeAndGetNut(name, false));
-        for (auto& prod : j[name]) {
-            Production nonTermProd;
-            nonTermProd.number = currentProd++;
-            for(auto& n: prod) {
-                nonTermProd.nuts.push_back(makeAndGetNut(n.asString(), validTokenName(n.asString())));
-            }
-            nonTerminal->productions.push_back(nonTermProd);
-        }
-    }
-
-    for (auto& n : nuts) {
-        n->dump();
+    for (auto& p : gdesc.GetNuts()) {
+        p.second->Dump();
     }
 }

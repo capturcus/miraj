@@ -1,0 +1,19 @@
+{
+    "tokens": {
+        "PLUS": "+",
+        "WHILE": "while"
+    },
+    "productions": {
+        "start": [
+            ["expression"]
+        ],
+        "expression":[
+            ["factor"],
+            ["factor", "PLUS", "expression"]
+        ],
+        "factor": [
+            ["IDENTIFIER"],
+            ["NUMERAL"]
+        ]
+    }
+}

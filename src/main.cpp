@@ -26,7 +26,13 @@ int main(int argc, char ** argv)
     sf::RenderWindow window(sf::VideoMode(800, 600, 32), "lol");
 
     ParsingEngine parsingEngine;
-    parsingEngine.InitGrammar("../data/grammar.json");
+    try {
+        parsingEngine.InitGrammar("../data/grammar.json");
+    }
+    catch (const char* c) {
+        printf("Caught string exception: %s\n", c);
+        return 1;
+    }
 
     window.setKeyRepeatEnabled(false);
 
