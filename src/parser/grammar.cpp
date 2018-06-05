@@ -20,6 +20,10 @@ void NonTerminal::Dump() const {
     std::cout << "]\n";
 }
 
+void FlatList::Dump() const {
+    std::cout << "FLATLIST " << GetName() << "(" << child->GetName() << ", " << separator->GetName() << ")\n";
+}
+
 static bool isValidTokenName(const std::string& name) {
     for (char c : name) {
         if(!isupper(c)) {
@@ -58,6 +62,16 @@ static void parseTerminals(
             std::make_unique<Terminal>(name, termsDesc[name].asString())
         );
     }
+
+    // add built-ins: IDENTIFIER and NUMERAL
+    insertUniqueNut(
+            nuts, "IDENTIFIER",
+            std::make_unique<Terminal>("IDENTIFIER", "<identifier>")
+        );
+    insertUniqueNut(
+        nuts, "NUMERAL",
+        std::make_unique<Terminal>("NUMERAL", "<numeral>")
+    );
 }
 
 static Production parseProduction(
@@ -83,21 +97,41 @@ static void parseNonterminals(NutMap& nuts, const Json::Value& nonTermsDesc) {
 
     // Allocate nonterminals
     for (const auto& name : mbNames) {
-        insertUniqueNut(
-            nuts, name,
-            std::make_unique<NonTerminal>(name)
-        );
+        const auto& nutDesc = nonTermsDesc[name];
+        if (nutDesc.type() == Json::objectValue) {
+            // object means it's a FlatList
+            insertUniqueNut(
+                nuts, name,
+                std::make_unique<FlatList>(name)
+            );
+        } else if (nutDesc.type() == Json::arrayValue) {
+            // array means it's a NonTerminal
+            insertUniqueNut(
+                nuts, name,
+                std::make_unique<NonTerminal>(name)
+            );
+        }
     }
 
     // Initialize nonterminals with productions
     int prodNum = 0;
     for (const auto& name : mbNames) {
-        NonTerminal* nt = static_cast<NonTerminal*>(nuts.at(name).get());
-        const auto& prodsDesc = nonTermsDesc[name];
-        for (Json::ArrayIndex i = 0; i < prodsDesc.size(); i++) {
-            Production prod = parseProduction(nuts, prodNum, prodsDesc[i]);
-            nt->AddProduction(std::move(prod));
-            prodNum++;
+        const auto& nutDesc = nonTermsDesc[name];
+        if (nutDesc.type() == Json::objectValue) {
+            // FlatList
+            FlatList* fl = static_cast<FlatList*>(nuts.at(name).get());
+            const std::string& child = nutDesc["child"].asString();
+            fl->child = nuts.at(child).get();
+            fl->separator = nuts.at(nutDesc["separator"].asString())->AsTerminal();
+        } else if (nutDesc.type() == Json::arrayValue) {
+            // NonTerminal
+            NonTerminal* nt = static_cast<NonTerminal*>(nuts.at(name).get());
+            for (Json::ArrayIndex i = 0; i < nutDesc.size(); i++) {
+                const Json::Value& prodDesc = nutDesc[i]["production"];
+                Production prod = parseProduction(nuts, prodNum, prodDesc);
+                nt->AddProduction(std::move(prod));
+                prodNum++;
+            }
         }
     }
 }
@@ -106,8 +140,8 @@ GrammarDescription GrammarDescription::FromJsonValue(
     const Json::Value& description
 ) {
     NutMap nuts;
-    parseTerminals(nuts, description["tokens"]);
-    parseNonterminals(nuts, description["productions"]);
+    parseTerminals(nuts, description["terminals"]);
+    parseNonterminals(nuts, description["nonterminals"]);
 
     return GrammarDescription(std::move(nuts));
 }

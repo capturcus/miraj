@@ -116,6 +116,9 @@ LexingEngine::LexingEngine() {}
 void LexingEngine::Init(std::vector<std::pair<std::string, std::string>> patterns) {
     matchers.clear();
     for (auto& pattern : patterns) {
+        if (pattern.first == "IDENTIFIER" || pattern.first == "NUMERAL") {
+            continue; // skip because we're adding those manually
+        }
         matchers.push_back(std::make_unique<FixedTokenMatcher>(pattern.first, pattern.second));
     }
     matchers.push_back(std::make_unique<IdentifierMatcher>());

@@ -1,16 +1,43 @@
 {
-    "tokens": {
+    "terminals": {
+        "PLUS": "+",
+        "WHILE": "while",
         "LPAREN": "(",
         "RPAREN": ")",
-        "PLUS": "+"
+        "LBRACE": "{",
+        "RBRACE": "}",
+        "IF": "}",
+        "NEWLINE": "\n"
     },
-    "productions": {
-        "start": [
-            ["expression"]
+    "nonterminals": {
+        "start": [{
+                "production": ["stmts"]
+            },
+            {
+                "production": ["if_stmt"]
+            }
         ],
-        "expression": [
-            ["LPAREN", "expression", "RPAREN"],
-            ["PLUS"]
+        "if_stmt": [{
+            "production": ["IF", "LPAREN", "components", "RPAREN", "LBRACE", "stmts", "RBRACE"],
+            "display": "if (@2) {\n@@5\n}"
+        }],
+        "stmts": {
+            "child": "stmt",
+            "separator": "NEWLINE"
+        },
+        "stmt": [{
+            "production": ["IDENTIFIER"]
+        }],
+        "components": {
+            "child": "component",
+            "separator": "PLUS"
+        },
+        "component": [{
+                "production": ["IDENTIFIER"]
+            },
+            {
+                "production": ["NUMERAL"]
+            }
         ]
     }
 }

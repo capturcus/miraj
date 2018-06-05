@@ -1,0 +1,16 @@
+{
+    "tokens": {
+        "LPAREN": "(",
+        "RPAREN": ")",
+        "PLUS": "+"
+    },
+    "productions": {
+        "start": [
+            ["expression"]
+        ],
+        "expression": [
+            ["LPAREN", "expression", "RPAREN"],
+            ["PLUS"]
+        ]
+    }
+}

@@ -15,29 +15,6 @@ ParsingEngine::ParsingEngine() {
     lexingEngine = std::make_unique<LexingEngine>();
 }
 
-Nut* ParsingEngine::makeAndGetNut(std::string lhs, bool terminal) {
-    Nut* ret = getNut(lhs);
-    if (ret != nullptr) {
-        return ret;
-    }
-    if (terminal) {
-        nuts.push_back(std::make_unique<Terminal>(lhs));
-    } else {
-        nuts.push_back(std::make_unique<NonTerminal>(lhs));
-    }
-    ret = nuts.back().get();
-    return ret;
-}
-
-Nut* ParsingEngine::getNut(std::string lhs) {
-    for (auto& nut: nuts) {
-        if(nut->lhs == lhs) {
-            return nut.get();
-        }
-    }
-    return nullptr;
-}
-
 bool validTokenName(std::string name) {
     for (char c : name) {
         if(!isupper(c)) {

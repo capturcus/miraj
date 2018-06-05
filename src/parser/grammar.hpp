@@ -6,6 +6,7 @@
 class Nut;
 class Terminal;
 class NonTerminal;
+class FlatList;
 
 struct Production {
     int number;
@@ -29,6 +30,10 @@ public:
     }
 
     virtual NonTerminal* AsNonTerminal() {
+        return nullptr;
+    }
+
+    virtual FlatList* AsFlatList() {
         return nullptr;
     }
 
@@ -79,6 +84,20 @@ public:
 
     inline void AddProduction(Production prod) {
         productions.emplace_back(std::move(prod));
+    }
+
+    void Dump() const override;
+};
+
+class FlatList final
+    : public Nut
+{
+public:
+    Nut* child;
+    Terminal* separator;
+    FlatList(std::string name)
+            : Nut(name)
+            {
     }
 
     void Dump() const override;
