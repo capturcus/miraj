@@ -1,3 +1,4 @@
+#pragma once
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,9 +9,12 @@ class Terminal;
 class NonTerminal;
 class FlatList;
 
+using NutMap = std::map<std::string, std::unique_ptr<Nut>>;
+
 struct Production {
     int number;
     std::vector<Nut*> nuts;
+    std::string displayFormat;
 };
 
 class Nut {
@@ -100,6 +104,10 @@ public:
             {
     }
 
+    virtual FlatList* AsFlatList() override {
+        return this;
+    }
+
     void Dump() const override;
 };
 
@@ -117,7 +125,7 @@ public:
     static GrammarDescription FromJsonValue(const Json::Value& description);
 
     std::vector<std::pair<std::string, std::string>> GetTokenList() const;
-    inline const std::map<std::string, std::unique_ptr<Nut>>& GetNuts() const {
+    inline const NutMap& GetNuts() const {
         return nuts;
     }
 };

@@ -8,8 +8,9 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "lexer/lexingengine.hpp"
 #include "parser/parsingengine.hpp"
+
+#include "appearance/beautyengine.hpp"
 
 template<typename T>
 static inline std::vector<T> operator+(const std::vector<T> & a, const std::vector<T> & b)
@@ -25,6 +26,7 @@ int main(int argc, char ** argv)
 {
     sf::RenderWindow window(sf::VideoMode(800, 600, 32), "lol");
 
+    // init parsing engine
     ParsingEngine parsingEngine;
     try {
         parsingEngine.InitGrammar("../data/grammar.json");
@@ -33,6 +35,10 @@ int main(int argc, char ** argv)
         printf("Caught string exception: %s\n", c);
         return 1;
     }
+
+    // init beauty engine
+    BeautyEngine beautyEngine;
+    beautyEngine.Init(&parsingEngine.gdesc);
 
     window.setKeyRepeatEnabled(false);
 
@@ -45,6 +51,8 @@ int main(int argc, char ** argv)
             if (event.type == sf::Event::TextEntered) {
                 parsingEngine.ProcessKeypress(event.text.unicode);
             }
+            window.clear();
+            beautyEngine.Repaint(window);
             window.display();
         }
     }

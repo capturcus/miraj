@@ -12,11 +12,11 @@ class LexingEngine;
 class ParsingEngine {
 public:
     ParsingEngine();
-    void ConsumeToken(Token t);
     void ProcessKeypress(char32_t c);
     void InitGrammar(const std::string& path);
+    
+    GrammarDescription gdesc;
 
 private:
     std::unique_ptr<LexingEngine> lexingEngine;
-    GrammarDescription gdesc;
 };

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <memory>
 
-using NutMap = std::map<std::string, std::unique_ptr<Nut>>;
+// using NutMap = std::map<std::string, std::unique_ptr<Nut>>;
 
 void Terminal::Dump() const {
     std::cout << "TERM " << GetName() << " " << contents << "\n";
@@ -14,6 +14,9 @@ void NonTerminal::Dump() const {
         std::cout << prod.number << ": ";
         for (auto& n : prod.nuts) {
             std::cout << n->GetName() << " ";
+        }
+        if (prod.displayFormat != "") {
+            std::cout << "(display: " << prod.displayFormat << ")";
         }
         std::cout << "|\n";
     }
@@ -77,8 +80,10 @@ static void parseTerminals(
 static Production parseProduction(
     NutMap& nuts,
     int productionNumber,
-    const Json::Value& prodDesc
+    const Json::Value& completeProdDesc
 ) {
+    const auto& prodDesc = completeProdDesc["production"];
+
     // TODO: Move member initialization into a constructor?
     Production prod;
     prod.number = productionNumber;
@@ -87,6 +92,10 @@ static Production parseProduction(
     for (Json::ArrayIndex i = 0; i < prodDesc.size(); i++) {
         const auto& key = prodDesc[i].asString();
         prod.nuts[(size_t)i] = nuts.at(key).get();
+    }
+
+    if (completeProdDesc.isMember("display")) {
+        prod.displayFormat = completeProdDesc["display"].asString();
     }
 
     return prod;
@@ -127,7 +136,7 @@ static void parseNonterminals(NutMap& nuts, const Json::Value& nonTermsDesc) {
             // NonTerminal
             NonTerminal* nt = static_cast<NonTerminal*>(nuts.at(name).get());
             for (Json::ArrayIndex i = 0; i < nutDesc.size(); i++) {
-                const Json::Value& prodDesc = nutDesc[i]["production"];
+                const Json::Value& prodDesc = nutDesc[i];
                 Production prod = parseProduction(nuts, prodNum, prodDesc);
                 nt->AddProduction(std::move(prod));
                 prodNum++;
