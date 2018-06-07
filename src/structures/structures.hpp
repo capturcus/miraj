@@ -19,6 +19,8 @@ public:
     virtual FlatListNode* AsFlatListNode() {
         return nullptr;
     }
+
+    virtual std::string ToString() = 0;
 };
 
 class TerminalNode 
@@ -28,6 +30,8 @@ public:
     virtual TerminalNode* AsTerminalNode() override {
         return this;
     }
+
+    std::string ToString() override;
 
     Terminal* terminal = nullptr;
     std::string value;
@@ -41,6 +45,8 @@ public:
         return this;
     }
 
+    std::string ToString() override;
+
     NonTerminal* nonTerminal  = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
 };
@@ -52,6 +58,8 @@ public:
     virtual FlatListNode* AsFlatListNode() override  {
         return this;
     }
+
+    std::string ToString() override;
 
     FlatList* flatList = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;

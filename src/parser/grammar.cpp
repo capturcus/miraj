@@ -2,10 +2,8 @@
 #include <iostream>
 #include <memory>
 
-// using NutMap = std::map<std::string, std::unique_ptr<Nut>>;
-
 void Terminal::Dump() const {
-    std::cout << "TERM " << GetName() << " " << contents << "\n";
+    std::cout << "TERM " << GetName() << " " << GetValue() << "\n";
 }
 
 void NonTerminal::Dump() const {

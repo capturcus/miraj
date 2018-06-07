@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
 #include <jsoncpp/json/json.h>
 
 class Nut;
@@ -52,8 +53,8 @@ private:
 
 public:
     Terminal(std::string name, std::string contents)
-            : Nut(std::move(name)) // TODO: Does moving here works?
-            , contents(std::move(contents)) {
+            : Nut(name)
+            , contents(contents) {
     }
 
     inline const std::string& GetValue() const {

@@ -2,11 +2,11 @@
     "terminals": {
         "PLUS": "+",
         "WHILE": "while",
+        "IF": "if",
         "LPAREN": "(",
         "RPAREN": ")",
         "LBRACE": "{",
         "RBRACE": "}",
-        "IF": "}",
         "NEWLINE": "\n"
     },
     "nonterminals": {

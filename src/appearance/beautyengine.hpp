@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "../parser/grammar.hpp"
+#include "../structures/structures.hpp"
 
 class BeautyEngine {
 public:
@@ -10,4 +11,7 @@ public:
     void Init(GrammarDescription*);
 
     GrammarDescription* grammarDesc;
+
+private:
+    TerminalNode debugMakeFixedTerminalNode(std::string name);
 };
