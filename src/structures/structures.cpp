@@ -1,7 +1,7 @@
 #include "structures.hpp"
 
 std::string TerminalNode::ToString() {
-    this->value;
+    return this->value;
 }
 
 std::string NonTerminalNode::ToString() {

@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include <locale>
 #include <memory>
 #include <iostream>
@@ -32,7 +30,7 @@ int main(int argc, char ** argv)
         parsingEngine.InitGrammar("../data/grammar.json");
     }
     catch (const char* c) {
-        printf("Caught string exception: %s\n", c);
+		std::cout << "Caught string exception: " << c << "\n";
         return 1;
     }
 
