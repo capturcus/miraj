@@ -1,5 +1,6 @@
 make LexingEngine expose a list of options viable for rendering
 make LexingEngine expose a function for choosing from said list
-whitespaces
 backspaces
 Change JSON format - use keys instead of full objects
+
+reject letters not fitting into any token

@@ -63,5 +63,4 @@ public:
 
     FlatList* flatList = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
-    Terminal* separator;
 };

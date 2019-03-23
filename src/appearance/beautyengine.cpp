@@ -40,16 +40,18 @@ void BeautyEngine::Init(GrammarDescription* gd) {
 
     auto flatList2 = new FlatListNode();
 
-    auto ifStmt = NonTerminalNode();
-    ifStmt.nonTerminal = this->grammarDesc->GetNuts().at("if_stmt").get()->AsNonTerminal();
-    ifStmt.children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("IF")));
-    ifStmt.children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("LPAREN")));
-    ifStmt.children.push_back(std::unique_ptr<FlatListNode>(flatList));
-    ifStmt.children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RPAREN")));
-    ifStmt.children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("LBRACE")));
-    // ifStmt.children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
+    auto ifStmt = new NonTerminalNode();
+    ifStmt->nonTerminal = this->grammarDesc->GetNuts().at("if_stmt").get()->AsNonTerminal();
+    ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("IF")));
+    ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("LPAREN")));
+    ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList));
+    ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RPAREN")));
+    ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("LBRACE")));
+    ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList2));
+    ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
 
     root.nonTerminal = this->grammarDesc->GetNuts().at("start").get()->AsNonTerminal();
+    root.children.push_back(std::unique_ptr<NonTerminalNode>(ifStmt));
 
     std::cout << "ROOT TOSTRING " << root.ToString() << "\n";
 }

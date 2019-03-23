@@ -57,8 +57,8 @@ public:
             , contents(contents) {
     }
 
-    inline const std::string& GetValue() const {
-        return contents;
+    inline std::string GetValue() const {
+        return std::string(contents);
     }
 
     virtual Terminal* AsTerminal() override {

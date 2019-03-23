@@ -1,7 +1,7 @@
 #include "structures.hpp"
 
 std::string TerminalNode::ToString() {
-    this->value;
+    return this->value;
 }
 
 std::string NonTerminalNode::ToString() {
@@ -9,15 +9,19 @@ std::string NonTerminalNode::ToString() {
     for (auto& child : this->children) {
         ret += child->ToString() + " ";
     }
-    ret.pop_back();
+    if (ret.length() > 0) {
+        ret.pop_back();
+    }
     return ret;
 }
 
 std::string FlatListNode::ToString() {
     std::string ret;
     for (auto& child : this->children) {
-        ret += child->ToString() + separator->GetValue();
+        ret += child->ToString() + flatList->separator->GetValue();
     }
-    ret.pop_back();
+    if (ret.length() > 0) {
+        ret.pop_back(); // fixme what if the separator is longer than 1 char
+    }
     return ret;
 }
