@@ -1,5 +1,9 @@
 #include <iostream> // debugging
+#ifdef _WIN32
+#include <json/json.h>
+#else
 #include <jsoncpp/json/json.h>
+#endif
 #include <fstream>
 
 #include "parsingengine.hpp"

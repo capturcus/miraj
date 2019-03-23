@@ -5,6 +5,9 @@ project(miraj)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 find_package(SFML 2.4 COMPONENTS system window graphics audio REQUIRED)
+
+find_package(jsoncpp REQUIRED)
+include_directories(${JsonCpp_INCLUDE_DIR} ${SFML_INCLUDE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall")
 
 file(GLOB miraj_SRC
@@ -16,4 +19,9 @@ file(GLOB miraj_SRC
     )
 
 add_executable(miraj ${miraj_SRC})
-target_link_libraries(miraj ${SFML_LIBRARIES} jsoncpp)
+if(JsonCpp_LIBRARY)
+else()
+    set(JsonCpp_LIBRARY jsoncpp)
+endif()
+target_link_libraries(miraj ${SFML_LIBRARIES} ${JsonCpp_LIBRARY})
+# target_link_libraries(miraj ${SFML_LIBRARIES} jsoncpp)
