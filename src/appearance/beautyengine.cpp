@@ -1,7 +1,7 @@
 #include "beautyengine.hpp"
 #include <iostream>
 
-static sf::Font font;
+sf::Font font;
 static NonTerminalNode root;
 
 TerminalNode BeautyEngine::debugMakeFixedTerminalNode(std::string name) {
@@ -50,18 +50,19 @@ void BeautyEngine::Init(GrammarDescription* gd) {
     ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList2));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
 
-    root.nonTerminal = this->grammarDesc->GetNuts().at("start").get()->AsNonTerminal();
-    root.children.push_back(std::unique_ptr<NonTerminalNode>(ifStmt));
+    // root.nonTerminal = this->grammarDesc->GetNuts().at("start").get()->AsNonTerminal();
+    // root.children.push_back(std::unique_ptr<NonTerminalNode>(ifStmt));
+
+    root.nonTerminal = this->grammarDesc->GetNuts().at("stmt").get()->AsNonTerminal();
+    root.prodNumber = 5;
+    auto ti = debugMakeFixedTerminalNode("IDENTIFIER");
+    ti.value = "testowyIdentyfikator";
+    root.children.push_back(std::make_unique<TerminalNode>(ti));
 
     std::cout << "ROOT TOSTRING " << root.ToString() << "\n";
 }
 
 void BeautyEngine::Repaint(sf::RenderWindow& window) {
-    sf::Text text;
-    text.setFont(font); // font is a sf::Font
-    text.setString("Hello world");
-    text.setCharacterSize(24); // in pixels, not points!
-    text.setFillColor(sf::Color::Red);
-    // text.setStyle(sf::Text::Bold | sf::Text::Underlined);
-    window.draw(text);
+    auto renderRoot = root.Render(sf::Vector2f(0,0));
+    renderRoot->Render(window);
 }

@@ -37,9 +37,9 @@ void ParsingEngine::InitGrammar(const std::string& path) {
     gdesc = GrammarDescription::FromJsonValue(obj);
     lexingEngine->Init(gdesc.GetTokenList());
 
-    // std::cout << "\n\nPRODUCTIONS\n";
+    std::cout << "\n\nPRODUCTIONS\n";
 
-    /*for (auto& p : gdesc.GetNuts()) {
+    for (auto& p : gdesc.GetNuts()) {
         p.second->Dump();
-    }*/
+    }
 }

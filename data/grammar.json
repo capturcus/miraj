@@ -19,14 +19,15 @@
         ],
         "if_stmt": [{
             "production": ["IF", "LPAREN", "components", "RPAREN", "LBRACE", "stmts", "RBRACE"],
-            "display": "@0 @1@2@3 @4\n@@5\n@6"
+            "display": "@ @@@ @\n\t@\n@"
         }],
         "stmts": {
             "child": "stmt",
             "separator": "NEWLINE"
         },
         "stmt": [{
-            "production": ["IDENTIFIER"]
+            "production": ["IDENTIFIER"],
+            "display": "@"
         }],
         "components": {
             "child": "component",
