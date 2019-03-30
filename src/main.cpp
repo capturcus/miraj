@@ -10,8 +10,8 @@
 
 #include "appearance/beautyengine.hpp"
 
-template<typename T>
-static inline std::vector<T> operator+(const std::vector<T> & a, const std::vector<T> & b)
+template <typename T>
+static inline std::vector<T> operator+(const std::vector<T> &a, const std::vector<T> &b)
 {
     std::vector<T> ret;
     ret.reserve(a.size() + b.size());
@@ -20,17 +20,19 @@ static inline std::vector<T> operator+(const std::vector<T> & a, const std::vect
     return ret;
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
     sf::RenderWindow window(sf::VideoMode(800, 600, 32), "lol");
 
     // init parsing engine
     ParsingEngine parsingEngine;
-    try {
+    try
+    {
         parsingEngine.InitGrammar("../data/grammar.json");
     }
-    catch (const char* c) {
-		std::cout << "Caught string exception: " << c << "\n";
+    catch (const char *c)
+    {
+        std::cout << "Caught string exception: " << c << "\n";
         return 1;
     }
 
@@ -40,21 +42,32 @@ int main(int argc, char ** argv)
 
     window.setKeyRepeatEnabled(false);
 
-    while (window.isOpen()) {
+    while (window.isOpen())
+    {
         sf::Event event;
-        if (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+        if (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
                 window.close();
             }
-            if (event.type == sf::Event::TextEntered) {
+            if (event.type == sf::Event::TextEntered)
+            {
                 parsingEngine.ProcessKeypress(event.text.unicode);
             }
-            window.clear();
-            beautyEngine.Repaint(window);
-            window.display();
+
+            if (event.type == sf::Event::KeyPressed ||
+                event.type == sf::Event::KeyReleased ||
+                event.type == sf::Event::Resized ||
+                event.type == sf::Event::LostFocus ||
+                event.type == sf::Event::GainedFocus)
+            {
+                window.clear();
+                beautyEngine.Repaint(window);
+                window.display();
+            }
         }
     }
 
     return 0;
 }
-

@@ -21,9 +21,10 @@ class RenderChunk {
     std::vector<sf::Text> texts;
     std::vector<ColoredRectangle> rects;
     std::vector<std::unique_ptr<RenderChunk>> children;
-    sf::Vector2f position; // within parent
+    sf::Vector2f position; // relative to the parent
 
     sf::Vector2f ComputeSize();
+    void AddOffset(sf::Vector2f offset);
     void Render(sf::RenderWindow& window);
 };
 
@@ -73,7 +74,7 @@ public:
 
     NonTerminal* nonTerminal  = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
-    int prodNumber;
+    int prodNumber = -1;
 };
 
 class FlatListNode

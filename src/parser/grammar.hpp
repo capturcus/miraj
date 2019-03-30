@@ -17,7 +17,7 @@ class FlatList;
 using NutMap = std::map<std::string, std::unique_ptr<Nut>>;
 
 struct Production {
-    int number;
+    int number = -2;
     std::vector<Nut*> nuts;
     std::string displayFormat;
 };

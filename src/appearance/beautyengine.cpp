@@ -4,20 +4,21 @@
 sf::Font font;
 static NonTerminalNode root;
 
-TerminalNode BeautyEngine::debugMakeFixedTerminalNode(std::string name) {
+TerminalNode BeautyEngine::debugMakeFixedTerminalNode(std::string name)
+{
     TerminalNode ret;
     ret.terminal = this->grammarDesc->GetNuts().at(name)->AsTerminal();
     ret.value = ret.terminal->GetValue();
     return ret;
 }
 
-
-void BeautyEngine::Init(GrammarDescription* gd) {
+void BeautyEngine::Init(GrammarDescription *gd)
+{
     if (!font.loadFromFile("../data/fonts/Inconsolata-Regular.ttf"))
     {
         std::cout << "failed to load font\n";
     }
-    
+
     this->grammarDesc = gd;
 
     auto flatList = new FlatListNode();
@@ -47,22 +48,26 @@ void BeautyEngine::Init(GrammarDescription* gd) {
     ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RPAREN")));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("LBRACE")));
-    ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList2));
+    // ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList2));
+
+    auto stmt = new NonTerminalNode();
+    stmt->prodNumber = 5;
+    stmt->nonTerminal = this->grammarDesc->GetNuts().at("stmt").get()->AsNonTerminal();
+    auto t = debugMakeFixedTerminalNode("IDENTIFIER");
+    t.value = "childe";
+    stmt->children.push_back(std::make_unique<TerminalNode>(t));
+
+    ifStmt->children.push_back(std::unique_ptr<NonTerminalNode>(stmt));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
+    ifStmt->prodNumber = 2;
 
-    // root.nonTerminal = this->grammarDesc->GetNuts().at("start").get()->AsNonTerminal();
-    // root.children.push_back(std::unique_ptr<NonTerminalNode>(ifStmt));
-
-    root.nonTerminal = this->grammarDesc->GetNuts().at("stmt").get()->AsNonTerminal();
-    root.prodNumber = 5;
-    auto ti = debugMakeFixedTerminalNode("IDENTIFIER");
-    ti.value = "testowyIdentyfikator";
-    root.children.push_back(std::make_unique<TerminalNode>(ti));
+    root = std::move(*ifStmt);
 
     std::cout << "ROOT TOSTRING " << root.ToString() << "\n";
 }
 
-void BeautyEngine::Repaint(sf::RenderWindow& window) {
-    auto renderRoot = root.Render(sf::Vector2f(0,0));
-    renderRoot->Render(window);
+void BeautyEngine::Repaint(sf::RenderWindow &window)
+{
+    auto chunkRoot = root.Render(sf::Vector2f(0, 0));
+    chunkRoot->Render(window);
 }

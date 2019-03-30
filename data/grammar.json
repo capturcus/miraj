@@ -18,7 +18,7 @@
             }
         ],
         "if_stmt": [{
-            "production": ["IF", "LPAREN", "components", "RPAREN", "LBRACE", "stmts", "RBRACE"],
+            "production": ["IF", "LPAREN", "components", "RPAREN", "LBRACE", "stmt", "RBRACE"],
             "display": "@ @@@ @\n\t@\n@"
         }],
         "stmts": {
@@ -26,8 +26,10 @@
             "separator": "NEWLINE"
         },
         "stmt": [{
-            "production": ["IDENTIFIER"],
-            "display": "@"
+            "production": ["IDENTIFIER"]
+        }],
+        "test_nonterm": [{
+            "production": ["components"]
         }],
         "components": {
             "child": "component",
