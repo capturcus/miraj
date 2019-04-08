@@ -18,8 +18,8 @@ struct ColoredRectangle {
 
 class RenderChunk {
     public:
-    std::vector<sf::Text> texts;
-    std::vector<ColoredRectangle> rects;
+    sf::Text text;
+    sf::Color rectColor = sf::Color(0,0,0);
     std::vector<std::unique_ptr<RenderChunk>> children;
     sf::Vector2f position; // relative to the parent
 
@@ -43,7 +43,7 @@ public:
     }
 
     virtual std::string ToString() = 0;
-    virtual std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) = 0;
+    virtual std::unique_ptr<RenderChunk> Render() = 0;
 };
 
 class TerminalNode 
@@ -55,7 +55,7 @@ public:
     }
 
     std::string ToString() override;
-    std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) override;
+    std::unique_ptr<RenderChunk> Render() override;
 
     Terminal* terminal = nullptr;
     std::string value;
@@ -70,7 +70,7 @@ public:
     }
 
     std::string ToString() override;
-    std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) override;
+    std::unique_ptr<RenderChunk> Render() override;
 
     NonTerminal* nonTerminal  = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
@@ -86,8 +86,11 @@ public:
     }
 
     std::string ToString() override;
-    std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) override;
+    std::unique_ptr<RenderChunk> Render() override;
 
     FlatList* flatList = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
 };
+
+std::ostream& operator<< (std::ostream &out, const sf::Vector2f& v);
+std::ostream& operator<< (std::ostream &out, const sf::FloatRect& r);

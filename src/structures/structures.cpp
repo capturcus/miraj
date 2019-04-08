@@ -1,5 +1,16 @@
 #include "structures.hpp"
 
+std::ostream &operator<<(std::ostream &out, const sf::Vector2f &v)
+{
+    out << v.x << "," << v.y;
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, const sf::FloatRect &r)
+{
+    out << r.left << "," << r.top << "," << r.width << "," << r.height << "\n";
+}
+
 std::string TerminalNode::ToString()
 {
     return this->value;
@@ -40,29 +51,17 @@ void ColoredRectangle::Render(sf::RenderWindow &window)
 void RenderChunk::Render(sf::RenderWindow &window)
 {
     AddOffset(this->position);
-    for (auto &t : texts)
-    {
-        window.draw(t);
-    }
-    for (auto &r : rects)
-    {
-        r.Render(window);
-    }
+    window.draw(text);
+    // conditionally draw rectangle
     for (auto &c : children)
     {
         c->Render(window);
     }
 }
 
-void RenderChunk::AddOffset(sf::Vector2f offset) {
-    for (auto &t : texts)
-    {
-        t.setPosition(t.getPosition()+offset);
-    }
-    for (auto &r : rects)
-    {
-        r.rect.setPosition(r.rect.getPosition()+offset);
-    }
+void RenderChunk::AddOffset(sf::Vector2f offset)
+{
+    text.setPosition(text.getPosition() + offset);
     for (auto &c : children)
     {
         c->AddOffset(offset);
@@ -81,11 +80,13 @@ sf::Vector2f ensureCover(sf::Vector2f coveringRect, sf::FloatRect coveredRect)
 sf::Vector2f RenderChunk::ComputeSize()
 {
     sf::Vector2f ret;
-    for (auto &t : texts)
+    // TODO
+    /*for (auto &t : texts)
     {
+        std::cout << "text " << t.getString().toAnsiString() << " bound " << t.getLocalBounds() << "\n";
         auto bounds = t.getLocalBounds();
         ret = ensureCover(ret, bounds);
-    }
+    }*/
     return ret;
 }
 
@@ -99,14 +100,14 @@ sf::Text makeText(std::string t)
     return text;
 }
 
-std::unique_ptr<RenderChunk> TerminalNode::Render(sf::Vector2f offset)
+std::unique_ptr<RenderChunk> TerminalNode::Render()
 {
     auto ret = std::make_unique<RenderChunk>();
-    ret->texts.push_back(makeText(this->value));
+    ret->text = makeText(this->value);
     return std::move(ret);
 }
 
-std::unique_ptr<RenderChunk> NonTerminalNode::Render(sf::Vector2f offset)
+std::unique_ptr<RenderChunk> NonTerminalNode::Render()
 {
     // find the production that the current node is in
     auto productions = this->nonTerminal->GetProductions();
@@ -152,10 +153,12 @@ std::unique_ptr<RenderChunk> NonTerminalNode::Render(sf::Vector2f offset)
             std::cout << "DISCOVERED NUT " << childCount << " "
                       << "\n";
             auto &child = this->children[childCount];
-            auto chunk = child->Render(offset + sf::Vector2f(currentXOffset, 0));
-            chunk->position.x = currentXOffset+offset.x;
-            chunk->position.y = currentYOffset+offset.y;
-            currentXOffset += chunk->ComputeSize().x;
+            auto chunk = child->Render();
+            chunk->position.x = currentXOffset;
+            chunk->position.y = currentYOffset;
+            auto computedSize = chunk->ComputeSize();
+            std::cout << "COMPUTED SIZE " << computedSize << " " << child->ToString() << "\n";
+            currentXOffset += computedSize.x;
             ret->children.push_back(std::move(chunk));
             childCount++;
         }
@@ -181,7 +184,7 @@ std::unique_ptr<RenderChunk> NonTerminalNode::Render(sf::Vector2f offset)
     return std::unique_ptr<RenderChunk>(ret);
 }
 
-std::unique_ptr<RenderChunk> FlatListNode::Render(sf::Vector2f offset)
+std::unique_ptr<RenderChunk> FlatListNode::Render()
 {
     auto ret = std::make_unique<RenderChunk>();
     // TODO if the separator is a newline we have to treat this differently
@@ -192,19 +195,22 @@ std::unique_ptr<RenderChunk> FlatListNode::Render(sf::Vector2f offset)
     int currentYOffset = 0;
     for (size_t i = 0; i < children.size(); i++)
     {
-        auto& child = children[i];
-        auto chunk = child->Render(offset + sf::Vector2f(currentXOffset, 0));
-        chunk->position.x = currentXOffset+offset.x;
-        chunk->position.y = currentYOffset+offset.y;
+        auto &child = children[i];
+        auto chunk = child->Render();
+        chunk->position.x = currentXOffset;
+        chunk->position.y = currentYOffset;
+        chunk->AddOffset(sf::Vector2f(currentXOffset, currentYOffset));
         currentXOffset += chunk->ComputeSize().x;
         ret->children.push_back(std::move(chunk));
         // also push the separator if not at the end
-        if (i != children.size()-1) {
+        if (i != children.size() - 1)
+        {
+            RenderChunk* rc = new RenderChunk;
             currentXOffset += spaceBounds.width;
-            auto text = makeText(this->flatList->separator->GetValue());
-            text.setPosition(offset + sf::Vector2f(currentXOffset, 0));
-            auto textWidth = text.getLocalBounds().width;
-            ret->texts.push_back(text);
+            rc->text = makeText(this->flatList->separator->GetValue());
+            rc->position = sf::Vector2f(currentXOffset, 0);
+            int textWidth = rc->text.getLocalBounds().width;
+            ret->children.push_back(std::unique_ptr<RenderChunk>(rc));
             currentXOffset += textWidth + spaceBounds.width;
         }
     }

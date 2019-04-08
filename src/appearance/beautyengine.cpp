@@ -53,9 +53,9 @@ void BeautyEngine::Init(GrammarDescription *gd)
     auto stmt = new NonTerminalNode();
     stmt->prodNumber = 5;
     stmt->nonTerminal = this->grammarDesc->GetNuts().at("stmt").get()->AsNonTerminal();
-    auto t = debugMakeFixedTerminalNode("IDENTIFIER");
+    /*auto t = debugMakeFixedTerminalNode("IDENTIFIER");
     t.value = "childe";
-    stmt->children.push_back(std::make_unique<TerminalNode>(t));
+    stmt->children.push_back(std::make_unique<TerminalNode>(t));*/
 
     ifStmt->children.push_back(std::unique_ptr<NonTerminalNode>(stmt));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
@@ -68,6 +68,6 @@ void BeautyEngine::Init(GrammarDescription *gd)
 
 void BeautyEngine::Repaint(sf::RenderWindow &window)
 {
-    auto chunkRoot = root.Render(sf::Vector2f(0, 0));
+    auto chunkRoot = root.Render();
     chunkRoot->Render(window);
 }
