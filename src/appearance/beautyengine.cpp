@@ -1,6 +1,5 @@
 #include "beautyengine.hpp"
 #include <iostream>
-#include <fstream>
 
 sf::Font font;
 static NonTerminalNode root;

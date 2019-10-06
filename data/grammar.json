@@ -18,8 +18,8 @@
             }
         ],
         "if_stmt": [{
-            "production": ["IF", "LPAREN", "components", "RPAREN", "LBRACE", "stmt", "RBRACE"],
-            "display": "@ @@@ @\n\t@\n@"
+            "production": ["IF", "LPAREN", "components", "RPAREN", "LBRACE", "RBRACE"],
+            "display": "@ @@@ @\n\n@"
         }],
         "stmts": {
             "child": "stmt",

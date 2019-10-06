@@ -153,8 +153,6 @@ std::unique_ptr<RenderChunk> FlatListNode::Render(sf::Vector2f offset)
     return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
 }
 
-/////////////// RENDER CHUNKS
-
 sf::Vector2f ensureCover(sf::Vector2f coveringRect, sf::FloatRect coveredRect)
 {
     sf::Vector2f ret;

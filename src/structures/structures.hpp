@@ -9,6 +9,8 @@ class FlatListNode;
 
 extern sf::Font font;
 
+std::ostream& operator<<(std::ostream& os, const sf::Vector2f& v);
+
 /////////////// RENDER CHUNKS
 
 class RenderChunk {
@@ -115,5 +117,3 @@ public:
     FlatList* flatList = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
 };
-
-std::ostream& operator<<(std::ostream& os, const sf::Vector2f& v);
