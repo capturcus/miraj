@@ -2,12 +2,15 @@
 
 #include "../parser/grammar.hpp"
 #include "SFML/Graphics.hpp"
+#include <regex>
 
 class TerminalNode;
 class NonTerminalNode;
 class FlatListNode;
 
 extern sf::Font font;
+
+const int FONT_SIZE = 20;
 
 std::ostream& operator<<(std::ostream& os, const sf::Vector2f& v);
 
@@ -56,32 +59,16 @@ struct RenderChunkList
 
 class DisplayNode {
 public:
-    virtual TerminalNode* AsTerminalNode() {
-        return nullptr;
-    }
-
-    virtual NonTerminalNode* AsNonTerminalNode() {
-        return nullptr;
-    }
-
-    virtual FlatListNode* AsFlatListNode() {
-        return nullptr;
-    }
-
     virtual std::string ToString() = 0;
-    virtual std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) = 0;
+    virtual std::unique_ptr<RenderChunk> Render() = 0;
 };
 
 class TerminalNode 
     : public DisplayNode
 {
 public:
-    virtual TerminalNode* AsTerminalNode() override {
-        return this;
-    }
-
     std::string ToString() override;
-    std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) override;
+    std::unique_ptr<RenderChunk> Render() override;
 
     Terminal* terminal = nullptr;
     std::string value;
@@ -91,12 +78,10 @@ class NonTerminalNode
     : public DisplayNode
 {
 public:
-    virtual NonTerminalNode* AsNonTerminalNode() override {
-        return this;
-    }
-
     std::string ToString() override;
-    std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) override;
+    std::unique_ptr<RenderChunk> Render() override;
+
+    Production myProduction();
 
     NonTerminal* nonTerminal  = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
@@ -107,12 +92,8 @@ class FlatListNode
     : public DisplayNode
 {
 public:
-    virtual FlatListNode* AsFlatListNode() override  {
-        return this;
-    }
-
     std::string ToString() override;
-    std::unique_ptr<RenderChunk> Render(sf::Vector2f offset) override;
+    std::unique_ptr<RenderChunk> Render() override;
 
     FlatList* flatList = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;

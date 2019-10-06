@@ -1,8 +1,19 @@
 #include "structures.hpp"
 
+const int SPACE_WIDTH = 10;
+const int TAB_WIDTH = SPACE_WIDTH*4;
+
 sf::Text makeText(std::string t);
 
 /////////////// DISPLAY NODES
+
+// std::string DisplayNode::ToString() {
+//     return "<display node>";
+// }
+
+// std::unique_ptr<RenderChunk> DisplayNode::Render() {
+//     return nullptr;
+// }
 
 std::string TerminalNode::ToString()
 {
@@ -37,120 +48,136 @@ std::string FlatListNode::ToString()
     return ret;
 }
 
-std::unique_ptr<RenderChunk> TerminalNode::Render(sf::Vector2f offset)
+std::unique_ptr<RenderChunk> TerminalNode::Render()
 {
-    // auto ret = std::make_unique<RenderChunk>();
-    // ret->texts.push_back(makeText(this->value));
-    // return std::move(ret);
-    return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
+    auto ret = std::make_unique<RenderChunkText>(this->value, sf::Vector2f());
+    return std::move(ret);
+    // return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
 }
 
-std::unique_ptr<RenderChunk> NonTerminalNode::Render(sf::Vector2f offset)
+std::unique_ptr<RenderChunk> NonTerminalNode::Render()
 {
-    // // find the production that the current node is in
-    // auto productions = this->nonTerminal->GetProductions();
-    // Production *currentProduction = nullptr;
-    // for (auto &p : productions)
-    // {
-    //     if (p.number == this->prodNumber)
-    //     {
-    //         currentProduction = &p;
-    //         break;
-    //     }
-    // }
-    // if (currentProduction == nullptr)
-    // {
-    //     std::cout << "ERROR currentProduction " << this->prodNumber << " not found\n";
-    //     exit(1);
-    // }
+    // find the production that the current node is in
+    auto currentProduction = myProduction();
+    if (currentProduction.number == -2)
+    {
+        std::cout << "ERROR currentProduction " << this->prodNumber << " not found\n";
+        exit(1);
+    }
 
-    // // auto spaceBounds = makeText(" ").getLocalBounds();
+    RenderChunkList *ret = new RenderChunkList({0, 0});
+    sf::Vector2f currentOffset;
 
-    // RenderChunk *ret = new RenderChunk();
-    // int currentXOffset = 0;
-    // int currentYOffset = 0;
-    // // int rowBound = 0;
+    size_t displayCharCount = 0;
+    size_t childCount = 0;
 
-    // size_t displayCharCount = 0;
-    // size_t childCount = 0;
+    // if empty just display first child
+    if (currentProduction.displayFormat == "")
+    {
+        currentProduction.displayFormat = "@";
+    }
 
-    // // if empty just display first child
-    // if (currentProduction->displayFormat == "")
-    // {
-    //     currentProduction->displayFormat = "@";
-    // }
+    std::cout << "DISPLAY FORMAT " << currentProduction.displayFormat << "\n";
 
-    // std::cout << "DISPLAY FORMAT " << currentProduction->displayFormat << "\n";
+    bool tabbed = false;
+    while (displayCharCount < currentProduction.displayFormat.size())
+    {
+        auto ch = currentProduction.displayFormat[displayCharCount];
+        if (ch == '@' || ch == '%')
+        {
+            std::cout << "DISCOVERED NUT " << childCount << " " << "\n";
+            auto& child = this->children[childCount];
+            auto chunk = child->Render();
 
-    // while (displayCharCount < currentProduction->displayFormat.size())
-    // {
-    //     auto ch = currentProduction->displayFormat[displayCharCount];
-    //     if (ch == '@')
-    //     {
-    //         displayCharCount++;
-    //         std::cout << "DISCOVERED NUT " << childCount << " "
-    //                   << "\n";
-    //         auto &child = this->children[childCount];
-    //         auto chunk = child->Render(offset + sf::Vector2f(currentXOffset, 0));
-    //         chunk->position.x = currentXOffset+offset.x;
-    //         chunk->position.y = currentYOffset+offset.y;
-    //         currentXOffset += chunk->ComputeSize().x;
-    //         ret->children.push_back(std::move(chunk));
-    //         childCount++;
-    //     }
-    //     else if (ch == ' ')
-    //     {
-    //         std::cout << "SPACE\n";
-    //     }
-    //     else if (ch == '\t')
-    //     {
-    //         std::cout << "TAB\n";
-    //     }
-    //     else if (ch == '\n')
-    //     {
-    //         std::cout << "NEWLINE\n";
-    //     }
-    //     else
-    //     {
-    //         std::cout << "wrong char in display format: " << ch << "\n";
-    //     }
-    //     displayCharCount++;
-    // }
+            chunk->position = currentOffset;
+            if (tabbed) {
+                chunk->position.x += TAB_WIDTH;
+                tabbed = false;
+            }
 
-    // return std::unique_ptr<RenderChunk>(ret);
-    return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
+            if (ch == '%')
+                currentOffset += chunk->ComputeSize();
+            if (ch == '@')
+                currentOffset += {chunk->ComputeSize().x, 0};
+            ret->children.push_back(std::move(chunk));
+            childCount++;
+        }
+        else if (ch == ' ')
+        {
+            std::cout << "SPACE\n";
+            currentOffset.x += SPACE_WIDTH;
+        }
+        else if (ch == '\t')
+        {
+            std::cout << "TAB\n";
+            tabbed = true;
+        }
+        else if (ch == '\n')
+        {
+            std::cout << "NEWLINE\n";
+            currentOffset.x = 0;
+            currentOffset.y += FONT_SIZE;
+        }
+        else
+        {
+            std::cout << "wrong char in display format: " << ch << "\n";
+        }
+        displayCharCount++;
+    }
+
+    return std::unique_ptr<RenderChunk>(ret);
+    // return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
 }
 
-std::unique_ptr<RenderChunk> FlatListNode::Render(sf::Vector2f offset)
+std::unique_ptr<RenderChunk> FlatListNode::Render()
 {
-    // auto ret = std::make_unique<RenderChunk>();
-    // TODO if the separator is a newline we have to treat this differently
+    auto ret = std::make_unique<RenderChunkList>(sf::Vector2f());
 
-    // auto spaceBounds = makeText(" ").getLocalBounds();
+    bool separatorNewline = int(this->flatList->separator->GetValue()[0]) == 10;
 
-    // int currentXOffset = 0;
-    // int currentYOffset = 0;
-    // for (size_t i = 0; i < children.size(); i++)
-    // {
-    //     auto& child = children[i];
-    //     auto chunk = child->Render(offset + sf::Vector2f(currentXOffset, 0));
-    //     chunk->position.x = currentXOffset+offset.x;
-    //     chunk->position.y = currentYOffset+offset.y;
-    //     currentXOffset += chunk->ComputeSize().x;
-    //     ret->children.push_back(std::move(chunk));
-    //     // also push the separator if not at the end
-    //     if (i != children.size()-1) {
-    //         currentXOffset += spaceBounds.width;
-    //         auto text = makeText(this->flatList->separator->GetValue());
-    //         text.setPosition(offset + sf::Vector2f(currentXOffset, 0));
-    //         auto textWidth = text.getLocalBounds().width;
-    //         ret->texts.push_back(text);
-    //         currentXOffset += textWidth + spaceBounds.width;
-    //     }
-    // }
+    sf::Vector2f currentOffset;
+    for (size_t i = 0; i < children.size(); i++)
+    {
+        auto& child = children[i];
+        auto chunk = child->Render();
+        chunk->position = currentOffset;
+        if (separatorNewline) {
+            currentOffset += {0, FONT_SIZE};
+        } else {
+            currentOffset += {chunk->ComputeSize().x, 0};
+        }
+        ret->children.push_back(std::move(chunk));
+        // also push the separator if not at the end
+        if (i != children.size()-1) {
+            // not last child
+            if (!separatorNewline)
+                currentOffset += {SPACE_WIDTH, 0};
+            auto text = std::make_unique<RenderChunkText>(this->flatList->separator->GetValue(), currentOffset);
+            if (!separatorNewline) {
+                auto textWidth = text->ComputeSize().x;
+                currentOffset += {textWidth + SPACE_WIDTH, 0};
+            }
 
-    // return std::move(ret);
-    return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
+            ret->children.push_back(std::move(text));
+        }
+    }
+
+    return std::move(ret);
+    // return std::unique_ptr<RenderChunkRectangle>(new RenderChunkRectangle(sf::RectangleShape({2,2}), sf::Color::Red, {50,50}));
+}
+
+Production NonTerminalNode::myProduction() {
+    auto productions = this->nonTerminal->GetProductions();
+    Production currentProduction;
+    for (auto &p : productions)
+    {
+        if (p.number == this->prodNumber)
+        {
+            currentProduction = p;
+            break;
+        }
+    }
+    return currentProduction;
 }
 
 sf::Vector2f ensureCover(sf::Vector2f coveringRect, sf::FloatRect coveredRect)
@@ -227,10 +254,17 @@ sf::Text makeText(std::string t)
     text.setFont(font); // font is a sf::Font
     text.setString(t);
     text.setFillColor(sf::Color::White);
-    text.setCharacterSize(20); // in pixels, not points!
+    text.setCharacterSize(FONT_SIZE); // in pixels, not points!
     return text;
 }
 
 std::ostream& operator<<(std::ostream& os, const sf::Vector2f& v) {
     os << v.x << "," << v.y;
+}
+
+int stringOccurrences(const std::string& text, std::regex& expression) {
+    std::ptrdiff_t const match_count(std::distance(
+        std::sregex_iterator(text.begin(), text.end(), expression),
+        std::sregex_iterator()));
+    return match_count;
 }

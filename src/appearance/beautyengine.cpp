@@ -35,11 +35,11 @@ void BeautyEngine::Init(GrammarDescription *gd)
     }
     {
         auto t = debugMakeFixedTerminalNode("NUMERAL");
-        t.value = "123";
+        t.value = "69";
         flatList->children.push_back(std::make_unique<TerminalNode>(t));
     }
 
-    auto flatList2 = new FlatListNode();
+    // auto flatList2 = new FlatListNode();
 
     auto ifStmt = new NonTerminalNode();
     ifStmt->nonTerminal = this->grammarDesc->GetNuts().at("if_stmt").get()->AsNonTerminal();
@@ -48,17 +48,17 @@ void BeautyEngine::Init(GrammarDescription *gd)
     ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RPAREN")));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("LBRACE")));
-    // ifStmt->children.push_back(std::unique_ptr<FlatListNode>(flatList2));
-
-    auto stmt = new NonTerminalNode();
-    stmt->prodNumber = 5;
-    stmt->nonTerminal = this->grammarDesc->GetNuts().at("stmt").get()->AsNonTerminal();
-    auto t = debugMakeFixedTerminalNode("IDENTIFIER");
-    t.value = "childe";
-    stmt->children.push_back(std::make_unique<TerminalNode>(t));
-
-    ifStmt->children.push_back(std::unique_ptr<NonTerminalNode>(stmt));
     ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
+
+    // auto stmt = new NonTerminalNode();
+    // stmt->prodNumber = 5;
+    // stmt->nonTerminal = this->grammarDesc->GetNuts().at("stmt").get()->AsNonTerminal();
+    // auto t = debugMakeFixedTerminalNode("IDENTIFIER");
+    // t.value = "childe";
+    // stmt->children.push_back(std::make_unique<TerminalNode>(t));
+
+    // ifStmt->children.push_back(std::unique_ptr<NonTerminalNode>(stmt));
+    // ifStmt->children.push_back(std::make_unique<TerminalNode>(debugMakeFixedTerminalNode("RBRACE")));
     ifStmt->prodNumber = 2;
 
     root = std::move(*ifStmt);
@@ -68,7 +68,7 @@ void BeautyEngine::Init(GrammarDescription *gd)
 
 void BeautyEngine::Repaint(sf::RenderWindow &window)
 {
-    auto chunkRoot = std::make_unique<RenderChunkList>(sf::Vector2f({0,0}));
+    /*auto chunkRoot = std::make_unique<RenderChunkList>(sf::Vector2f({0,0}));
     chunkRoot->children.push_back(std::make_unique<RenderChunkRectangle>(sf::RectangleShape({50,50}), sf::Color::Red, sf::Vector2f({100,0})));
     chunkRoot->children.push_back(std::make_unique<RenderChunkRectangle>(sf::RectangleShape({50,50}), sf::Color::Red, sf::Vector2f({100,100})));
     chunkRoot->children.push_back(std::make_unique<RenderChunkRectangle>(sf::RectangleShape({50,50}), sf::Color::Red, sf::Vector2f({100,200})));
@@ -79,8 +79,9 @@ void BeautyEngine::Repaint(sf::RenderWindow &window)
     asd->children.push_back(std::move(rec));
     asd->children.push_back(std::move(siemka));
 
-    chunkRoot->children.push_back(std::move(asd));
+    chunkRoot->children.push_back(std::move(asd));*/
+    auto chunkRoot = root.Render();
 
-    chunkRoot->Render(window, {0, 0});
+    chunkRoot->Render(window, {0,0});
     std::cout << "computed size" << chunkRoot->ComputeSize() << "\n";
 }
