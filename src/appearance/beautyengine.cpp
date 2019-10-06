@@ -1,5 +1,6 @@
 #include "beautyengine.hpp"
 #include <iostream>
+#include <fstream>
 
 sf::Font font;
 static NonTerminalNode root;
@@ -68,6 +69,19 @@ void BeautyEngine::Init(GrammarDescription *gd)
 
 void BeautyEngine::Repaint(sf::RenderWindow &window)
 {
-    auto chunkRoot = root.Render(sf::Vector2f(0, 0));
-    chunkRoot->Render(window);
+    auto chunkRoot = std::make_unique<RenderChunkList>(sf::Vector2f({0,0}));
+    chunkRoot->children.push_back(std::make_unique<RenderChunkRectangle>(sf::RectangleShape({50,50}), sf::Color::Red, sf::Vector2f({100,0})));
+    chunkRoot->children.push_back(std::make_unique<RenderChunkRectangle>(sf::RectangleShape({50,50}), sf::Color::Red, sf::Vector2f({100,100})));
+    chunkRoot->children.push_back(std::make_unique<RenderChunkRectangle>(sf::RectangleShape({50,50}), sf::Color::Red, sf::Vector2f({100,200})));
+
+    auto siemka = std::make_unique<RenderChunkText>("eeeee", sf::Vector2f({0, 0}));
+    auto rec = std::make_unique<RenderChunkRectangle>(sf::RectangleShape(siemka->ComputeSize()), sf::Color::Green, sf::Vector2f({0, 0}));
+    auto asd = std::make_unique<RenderChunkList>(sf::Vector2f({0,0}));
+    asd->children.push_back(std::move(rec));
+    asd->children.push_back(std::move(siemka));
+
+    chunkRoot->children.push_back(std::move(asd));
+
+    chunkRoot->Render(window, {0, 0});
+    std::cout << "computed size" << chunkRoot->ComputeSize() << "\n";
 }

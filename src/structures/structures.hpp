@@ -9,24 +9,48 @@ class FlatListNode;
 
 extern sf::Font font;
 
-struct ColoredRectangle {
-    sf::RectangleShape rect;
-    float opacity;
-    sf::Color color;
-    void Render(sf::RenderWindow& window);
-};
+/////////////// RENDER CHUNKS
 
 class RenderChunk {
     public:
-    std::vector<sf::Text> texts;
-    std::vector<ColoredRectangle> rects;
-    std::vector<std::unique_ptr<RenderChunk>> children;
     sf::Vector2f position; // relative to the parent
 
-    sf::Vector2f ComputeSize();
-    void AddOffset(sf::Vector2f offset);
-    void Render(sf::RenderWindow& window);
+    RenderChunk(sf::Vector2f pos);
+    virtual sf::Vector2f ComputeSize() = 0;
+    virtual void Render(sf::RenderWindow& window, sf::Vector2f offset) = 0;
 };
+
+struct RenderChunkRectangle 
+    : public RenderChunk
+{
+    sf::RectangleShape rect;
+
+    RenderChunkRectangle(sf::RectangleShape rect, sf::Color c, sf::Vector2f offset);
+    sf::Vector2f ComputeSize();
+    void Render(sf::RenderWindow& window, sf::Vector2f offset) override;
+};
+
+struct RenderChunkText
+    : public RenderChunk
+{
+    sf::Text text;
+
+    RenderChunkText(std::string text, sf::Vector2f offset);
+    sf::Vector2f ComputeSize();
+    void Render(sf::RenderWindow& window, sf::Vector2f offset) override;
+};
+
+struct RenderChunkList
+    : public RenderChunk
+{
+    std::vector<std::unique_ptr<RenderChunk>> children;
+
+    RenderChunkList(sf::Vector2f pos);
+    sf::Vector2f ComputeSize();
+    void Render(sf::RenderWindow& window, sf::Vector2f offset) override;
+};
+
+/////////////// DISPLAY NODES
 
 class DisplayNode {
 public:
@@ -91,3 +115,5 @@ public:
     FlatList* flatList = nullptr;
     std::vector<std::unique_ptr<DisplayNode>> children;
 };
+
+std::ostream& operator<<(std::ostream& os, const sf::Vector2f& v);
